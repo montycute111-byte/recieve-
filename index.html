@@ -7,6 +7,7 @@
   <meta name="description" content="MorseReceive — listen, copy, and improve your Morse code reception.">
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="stats.css">
 </head>
 <body>
   <div class="app-shell">
@@ -57,6 +58,17 @@
           <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><span class="answer-message" id="answer-message"></span></div>
           <div class="result" id="result" hidden></div>
         </section>
+
+        <section class="panel stats-card" aria-labelledby="stats-title">
+          <div class="card-heading"><div><p class="eyebrow">PROGRESS</p><h2 id="stats-title">Stats</h2><p class="muted">Saved on this device. Revealed answers do not count.</p></div><button id="reset-stats">Reset Stats</button></div>
+          <div class="stats-grid">
+            <div class="stat-tile"><strong id="stat-attempts">0</strong><span>Attempts</span></div>
+            <div class="stat-tile"><strong id="stat-perfect">0</strong><span>Perfect</span></div>
+            <div class="stat-tile"><strong id="stat-accuracy">0%</strong><span>Accuracy</span></div>
+            <div class="stat-tile"><strong id="stat-streak">0</strong><span>Current streak</span></div>
+            <div class="stat-tile"><strong id="stat-best-streak">0</strong><span>Best streak</span></div>
+          </div>
+        </section>
       </section>
 
       <section class="view" id="alphabet-view" aria-labelledby="alphabet-title">
@@ -75,6 +87,6 @@
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=14"></script>
+    <script src="app.js?v=15"></script>
 </body>
 </html>
