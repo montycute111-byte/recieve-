@@ -124,6 +124,10 @@
     $("status-label").textContent = message;
   }
 
+  function blurAnswerInput() {
+    if (document.activeElement === $("answer-input")) $("answer-input").blur();
+  }
+
   function sleep(milliseconds) {
     return new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
@@ -203,6 +207,7 @@
 
   async function playFrom(startIndex) {
     const runId = ++playback.runId;
+    blurAnswerInput();
     playback.active = true;
     playback.paused = false;
     playback.countdown = false;
@@ -234,6 +239,7 @@
       if (runId !== playback.runId) return;
       playback.active = false;
       playback.currentIndex = exercise.length;
+      blurAnswerInput();
       updateProgress(exercise.length);
       setStatus("Transmission complete");
       $("listening-window").classList.remove("is-playing");
@@ -244,6 +250,7 @@
     } catch (error) {
       if (runId !== playback.runId) return;
       playback.active = false;
+      blurAnswerInput();
       $("listening-window").classList.remove("is-playing");
       setStatus("Ready for the next transmission");
       $("start-button").disabled = false;
@@ -255,6 +262,7 @@
   }
 
   async function startTransmission() {
+    blurAnswerInput();
     if (playback.active && playback.paused) {
       playback.paused = false;
       if (playback.audio?.state === "suspended") await playback.audio.resume();
@@ -279,13 +287,15 @@
   }
 
   function rewindOneLetter() {
-    if (!playback.active || playback.countdown || !exercise) return;
-    const current = Math.min(playback.currentIndex, Math.max(0, exercise.length - 1));
-    const target = Math.max(0, current - 1);
+    if (playback.countdown || !exercise) return;
+    const lastIndex = Math.max(0, [...exercise].reduce((last, character, index) => character === " " ? last : index, 0));
+    const current = playback.currentIndex >= exercise.length ? exercise.length : playback.currentIndex;
+    const target = current >= exercise.length ? lastIndex : Math.max(0, current - 1);
     playback.runId += 1;
     stopCurrentTone();
     playback.active = false;
     playback.paused = false;
+    blurAnswerInput();
     $("countdown-label").textContent = "";
     setStatus(`Rewound to letter ${letterNumber(target)}`);
     playFrom(target);
@@ -297,6 +307,7 @@
     playback.active = false;
     playback.paused = false;
     playback.countdown = false;
+    blurAnswerInput();
     $("countdown-label").textContent = "";
     $("listening-window").classList.remove("is-playing");
     $("start-button").disabled = false;
