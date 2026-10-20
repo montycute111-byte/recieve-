@@ -72,6 +72,16 @@
     return [...exercise.slice(0, index)].filter((char) => char !== " ").length + 1;
   }
 
+  function positionLabel(index) {
+    const safeIndex = Math.min(Math.max(0, index), Math.max(0, exercise.length - 1));
+    if ($("mode-select").value !== "sentences") return `Letter ${letterNumber(safeIndex)}`;
+    const throughCurrent = exercise.slice(0, safeIndex + 1);
+    const wordNumber = throughCurrent.trim().split(/\s+/).length;
+    const wordStart = Math.max(0, throughCurrent.lastIndexOf(" ") + 1);
+    const letterInWord = [...exercise.slice(wordStart, safeIndex + 1)].filter((char) => char !== " ").length;
+    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)}`;
+  }
+
   function generateExercise() {
     const mode = $("mode-select").value;
     const group = Number($("group-select").value);
@@ -92,7 +102,7 @@
     }
     playback.currentIndex = 0;
     updateProgress(0);
-    setStatus("Letter 1");
+    setStatus(positionLabel(0));
     $("answer-input").value = "";
     $("submit-button").disabled = true;
     $("score-label").textContent = "";
@@ -109,6 +119,10 @@
 
   function updateProgress(index) {
     const total = letterCount(exercise);
+    if ($("mode-select").value === "sentences") {
+      $("progress-label").textContent = `${positionLabel(index)} of ${total} letters`;
+      return;
+    }
     const current = Math.min(total, letterNumber(Math.min(index, exercise.length)));
     $("progress-label").textContent = `Letter ${Math.max(1, current)} of ${total}`;
   }
@@ -228,7 +242,7 @@
     for (const second of seconds) {
       if (runId !== playback.runId) return false;
       $("countdown-label").textContent = String(second);
-      setStatus(`Letter ${letterNumber(playback.currentIndex)}`);
+      setStatus(positionLabel(playback.currentIndex));
       await sleep(700);
     }
     $("countdown-label").textContent = "";
@@ -251,7 +265,7 @@
     $("stop-button").disabled = false;
     $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     updateProgress(playback.currentIndex);
-    setStatus(`Letter ${letterNumber(playback.currentIndex)}`);
+    setStatus(positionLabel(playback.currentIndex));
     try {
       await ensureAudio();
       if (settings.silenceBefore > 0) await sleep(Number(settings.silenceBefore) * 1000);
@@ -264,7 +278,7 @@
         if (exercise[index] === " ") continue;
         playback.currentIndex = index;
         updateProgress(index);
-        setStatus(`Letter ${letterNumber(index)}`);
+        setStatus(positionLabel(index));
         if (!(await playCharacter(exercise[index], runId))) return;
         if (index < exercise.length - 1) {
           await sleep(exercise[index + 1] === " " ? wordGap : letterGap);
@@ -276,7 +290,7 @@
       playback.currentIndex = exercise.length;
       disarmAnswerInput();
       updateProgress(exercise.length);
-      setStatus(`Letter ${letterNumber(Math.max(0, exercise.length - 1))}`);
+      setStatus(positionLabel(Math.max(0, exercise.length - 1)));
       $("listening-window").classList.remove("is-playing");
       $("start-button").disabled = false;
       $("replay-button").disabled = false;
@@ -287,7 +301,7 @@
       playback.active = false;
       disarmAnswerInput();
       $("listening-window").classList.remove("is-playing");
-      setStatus(`Letter ${letterNumber(Math.max(0, playback.currentIndex))}`);
+      setStatus(positionLabel(Math.max(0, playback.currentIndex)));
       $("start-button").disabled = false;
       $("replay-button").disabled = false;
       $("pause-button").disabled = true;
@@ -302,7 +316,7 @@
       playback.paused = false;
       if (playback.audio?.state === "suspended") await playback.audio.resume();
       $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
-      setStatus(`Letter ${letterNumber(playback.currentIndex)}`);
+      setStatus(positionLabel(playback.currentIndex));
       return;
     }
     if (playback.active) return;
@@ -333,7 +347,7 @@
     playback.paused = false;
     disarmAnswerInput();
     $("countdown-label").textContent = "";
-    setStatus(`Letter ${letterNumber(target)}`);
+    setStatus(positionLabel(target));
     playFrom(target);
   }
 
@@ -351,14 +365,14 @@
     $("pause-button").disabled = true;
     $("stop-button").disabled = true;
     $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
-    setStatus(`Letter ${letterNumber(Math.min(playback.currentIndex, Math.max(0, exercise.length - 1)))}`);
+    setStatus(positionLabel(Math.min(playback.currentIndex, Math.max(0, exercise.length - 1))));
   }
 
   function togglePause() {
     if (!playback.active || playback.countdown) return;
     playback.paused = !playback.paused;
     $("pause-button").innerHTML = playback.paused ? "▶ <span>Resume</span>" : "Ⅱ <span>Pause</span>";
-    setStatus(`Letter ${letterNumber(playback.currentIndex)}${playback.paused ? " · Paused" : ""}`);
+    setStatus(`${positionLabel(playback.currentIndex)}${playback.paused ? " · Paused" : ""}`);
   }
 
   function scoreAnswer() {
