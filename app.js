@@ -32,6 +32,16 @@
     "THE BAT FLIES AT MIDNIGHT.", "THE GHOST IS IN THE HOUSE.", "PUMPKINS GLOW AFTER DARK.", "WATCH FOR THE BLACK CAT.",
     "TRICK OR TREAT TONIGHT.", "THE MOON IS BRIGHT.", "A QUIET SIGNAL CARRIES FAR.", "THE OPERATOR COPIED IT RIGHT."
   ];
+  const HALLOWEEN_SENTENCES = [
+    "THE WITCH FLIES OVER THE MOON.", "A GHOST WHISPERS IN THE HALL.", "THE BLACK CAT WATCHES THE DOOR.",
+    "THE PUMPKIN GLOWS IN THE DARK.", "THE VAMPIRE HIDES UNDER THE CLOAK.", "BATS FLY OVER THE OLD CEMETERY.",
+    "THE CAULDRON BUBBLES AT MIDNIGHT.", "A CROW CALLS FROM THE TOWER.", "THE GOBLIN GUARDS THE CANDY.",
+    "THE SKELETON DANCES IN THE GRAVEYARD.", "A SPOOKY SHADOW CROSSES THE WALL.", "THE WEREWOLF HOWLS AT THE MOON.",
+    "THE WITCH BREWS A MAGIC POTION.", "THE HAUNTED HOUSE IS VERY QUIET.", "A PHANTOM WALKS THROUGH THE MIST.",
+    "THE OWL FLIES PAST THE WINDOW.", "THE MONSTER HIDES BEHIND THE TREE.", "THE CANDY BOWL IS FULL TONIGHT.",
+    "A RAVEN SITS ON THE OLD GATE.", "THE SPELL BEGINS AFTER DARK.", "THE MUMMY WAKES AT MIDNIGHT.",
+    "THE CEMETERY GATE CREAKS OPEN.", "A BLACK BAT CIRCLES THE HOUSE.", "THE PUMPKINS LINE THE PATH."
+  ];
   const STORAGE_KEY = "morseReceiveSettings";
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
@@ -72,9 +82,13 @@
     return [...exercise.slice(0, index)].filter((char) => char !== " ").length + 1;
   }
 
+  function isSentenceMode() {
+    return ["sentences", "halloween-sentences"].includes($("mode-select").value);
+  }
+
   function positionLabel(index) {
     const safeIndex = Math.min(Math.max(0, index), Math.max(0, exercise.length - 1));
-    if ($("mode-select").value !== "sentences") return `Letter ${letterNumber(safeIndex)}`;
+    if (!isSentenceMode()) return `Letter ${letterNumber(safeIndex)}`;
     const throughCurrent = exercise.slice(0, safeIndex + 1);
     const wordNumber = throughCurrent.trim().split(/\s+/).length;
     const wordStart = Math.max(0, throughCurrent.lastIndexOf(" ") + 1);
@@ -95,8 +109,8 @@
       const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
       const possible = source.filter((word) => word.length <= lengthAllowance);
       exercise = randomFrom(possible.length ? possible : source);
-    } else if (mode === "sentences") {
-      exercise = randomFrom(SENTENCES);
+    } else if (mode === "sentences" || mode === "halloween-sentences") {
+      exercise = randomFrom(mode === "halloween-sentences" ? HALLOWEEN_SENTENCES : SENTENCES);
     } else {
       exercise = Array.from({ length: group }, () => randomFrom(LETTERS)).join("");
     }
@@ -113,13 +127,13 @@
 
   function updateSummary() {
     const mode = $("mode-select").value;
-    const exerciseType = mode === "sentences" ? "Sentence" : `${$("group-select").value} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
+    const exerciseType = isSentenceMode() ? "Sentence" : `${$("group-select").value} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateProgress(index) {
     const total = letterCount(exercise);
-    if ($("mode-select").value === "sentences") {
+    if (isSentenceMode()) {
       $("progress-label").textContent = `${positionLabel(index)} of ${total} letters`;
       return;
     }
