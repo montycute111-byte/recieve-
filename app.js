@@ -52,18 +52,15 @@
     "THE SPELL FADES AT SUNRISE.", "A GHOST RINGS THE DOORBELL.", "THE CANDY DISAPPEARS FROM THE BOWL."
   ];
   const STORAGE_KEY = "morseReceiveSettings";
-  const STATS_KEY = "morseReceiveStats";
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
     silenceBefore: 0.7, silenceAfter: 0.7, countdown: true,
     autoAdvance: true, repeatCorrect: false, profileName: "Operator"
   };
-  const EMPTY_STATS = { attempts: 0, perfect: 0, accuracyTotal: 0, currentStreak: 0, bestStreak: 0 };
 
   const $ = (id) => document.getElementById(id);
   const exercisePools = new Map();
   const settings = loadSettings();
-  const stats = loadStats();
   const playback = {
     active: false, paused: false, countdown: false, currentIndex: 0,
     runId: 0, audio: null, oscillator: null, toastTimer: null
@@ -81,40 +78,6 @@
 
   function saveSettings() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
-  }
-
-  function loadStats() {
-    try {
-      return { ...EMPTY_STATS, ...JSON.parse(localStorage.getItem(STATS_KEY) || "{}") };
-    } catch (_) {
-      return { ...EMPTY_STATS };
-    }
-  }
-
-  function saveStats() {
-    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-  }
-
-  function updateStatsDisplay() {
-    $("stat-attempts").textContent = String(stats.attempts);
-    $("stat-perfect").textContent = String(stats.perfect);
-    $("stat-accuracy").textContent = `${stats.attempts ? Math.round(stats.accuracyTotal / stats.attempts) : 0}%`;
-    $("stat-streak").textContent = String(stats.currentStreak);
-    $("stat-best-streak").textContent = String(stats.bestStreak);
-  }
-
-  function recordStats(accuracy, correct) {
-    stats.attempts += 1;
-    stats.accuracyTotal += accuracy;
-    if (correct) {
-      stats.perfect += 1;
-      stats.currentStreak += 1;
-      stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
-    } else {
-      stats.currentStreak = 0;
-    }
-    saveStats();
-    updateStatsDisplay();
   }
 
   function randomFrom(value) {
@@ -469,7 +432,7 @@
     setStatus(`${positionLabel(playback.currentIndex)}${playback.paused ? " · Paused" : ""}`);
   }
 
-  function scoreAnswer(countStats = true) {
+  function scoreAnswer() {
     const expected = exercise.trim().toUpperCase();
     const actual = $("answer-input").value.trim().toUpperCase().replace(/\s+/g, " ");
     const maxLength = Math.max(expected.length, actual.length, 1);
@@ -479,7 +442,6 @@
     }
     const accuracy = Math.round((matches / maxLength) * 100);
     lastAnswerCorrect = expected === actual;
-    if (countStats) recordStats(accuracy, lastAnswerCorrect);
     $("score-label").textContent = `${accuracy}% accurate`;
     $("answer-message").textContent = lastAnswerCorrect ? "Perfect copy." : "Review the revealed copy below.";
     $("result").hidden = false;
@@ -492,7 +454,7 @@
   function revealAnswer() {
     $("answer-input").value = exercise;
     $("submit-button").disabled = false;
-    scoreAnswer(false);
+    scoreAnswer();
   }
 
   function escapeHtml(value) {
@@ -524,12 +486,6 @@
     $("answer-input").addEventListener("input", () => { $("submit-button").disabled = !$("answer-input").value.trim(); });
     $("submit-button").addEventListener("click", scoreAnswer);
     $("reveal-button").addEventListener("click", revealAnswer);
-    $("reset-stats").addEventListener("click", () => {
-      Object.assign(stats, EMPTY_STATS);
-      saveStats();
-      updateStatsDisplay();
-      showToast("Stats reset");
-    });
 
     const rangeSettings = [
       ["character-wpm", "characterWpm"], ["effective-wpm", "effectiveWpm"], ["frequency", "frequency"],
@@ -559,7 +515,6 @@
 
   updateSettingDisplays();
   updateProfile();
-  updateStatsDisplay();
   renderAlphabet();
   bindEvents();
   generateExercise();
