@@ -124,8 +124,14 @@
     $("status-label").textContent = message;
   }
 
-  function blurAnswerInput() {
-    if (document.activeElement === $("answer-input")) $("answer-input").blur();
+  function disarmAnswerInput() {
+    const input = $("answer-input");
+    input.readOnly = true;
+    input.blur();
+  }
+
+  function armAnswerInput() {
+    $("answer-input").readOnly = false;
   }
 
   function sleep(milliseconds) {
@@ -207,7 +213,7 @@
 
   async function playFrom(startIndex) {
     const runId = ++playback.runId;
-    blurAnswerInput();
+    disarmAnswerInput();
     playback.active = true;
     playback.paused = false;
     playback.countdown = false;
@@ -239,7 +245,7 @@
       if (runId !== playback.runId) return;
       playback.active = false;
       playback.currentIndex = exercise.length;
-      blurAnswerInput();
+      disarmAnswerInput();
       updateProgress(exercise.length);
       setStatus("Transmission complete");
       $("listening-window").classList.remove("is-playing");
@@ -250,7 +256,7 @@
     } catch (error) {
       if (runId !== playback.runId) return;
       playback.active = false;
-      blurAnswerInput();
+      disarmAnswerInput();
       $("listening-window").classList.remove("is-playing");
       setStatus("Ready for the next transmission");
       $("start-button").disabled = false;
@@ -262,7 +268,7 @@
   }
 
   async function startTransmission() {
-    blurAnswerInput();
+    disarmAnswerInput();
     if (playback.active && playback.paused) {
       playback.paused = false;
       if (playback.audio?.state === "suspended") await playback.audio.resume();
@@ -295,7 +301,7 @@
     stopCurrentTone();
     playback.active = false;
     playback.paused = false;
-    blurAnswerInput();
+    disarmAnswerInput();
     $("countdown-label").textContent = "";
     setStatus(`Rewound to letter ${letterNumber(target)}`);
     playFrom(target);
@@ -307,7 +313,7 @@
     playback.active = false;
     playback.paused = false;
     playback.countdown = false;
-    blurAnswerInput();
+    disarmAnswerInput();
     $("countdown-label").textContent = "";
     $("listening-window").classList.remove("is-playing");
     $("start-button").disabled = false;
@@ -374,6 +380,8 @@
     $("pause-button").addEventListener("click", togglePause);
     $("stop-button").addEventListener("click", stopTransmission);
     $("skip-button").addEventListener("click", () => { stopTransmission(); generateExercise(); startTransmission(); });
+    $("answer-input").addEventListener("pointerdown", armAnswerInput);
+    $("answer-input").addEventListener("click", armAnswerInput);
     $("answer-input").addEventListener("input", () => { $("submit-button").disabled = !$("answer-input").value.trim(); });
     $("submit-button").addEventListener("click", scoreAnswer);
     $("reveal-button").addEventListener("click", revealAnswer);
@@ -406,4 +414,5 @@
   renderAlphabet();
   bindEvents();
   generateExercise();
+  disarmAnswerInput();
 })();
