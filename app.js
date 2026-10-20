@@ -402,7 +402,10 @@
     $("reset-settings").addEventListener("click", () => { Object.assign(settings, STANDARD); saveSettings(); updateSettingDisplays(); updateProfile(); showToast("Standard timing restored"); });
 
     document.addEventListener("keydown", (event) => {
-      if (event.code === "Space" && playback.active) {
+      const answerInput = $("answer-input");
+      const typingInAnswer = document.activeElement === answerInput && !answerInput.readOnly;
+      const transmissionCanRewind = playback.active || playback.currentIndex >= exercise.length;
+      if (event.code === "Space" && transmissionCanRewind && !playback.countdown && !typingInAnswer) {
         event.preventDefault();
         rewindOneLetter();
       }
