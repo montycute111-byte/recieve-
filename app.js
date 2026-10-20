@@ -66,17 +66,15 @@
 
   function generateExercise() {
     const mode = $("mode-select").value;
-    const wordSet = $("word-set-select").value;
-    $("word-set-control").hidden = mode !== "words";
     const group = Number($("group-select").value);
     if (mode === "numbers") {
       exercise = Array.from({ length: group }, () => randomFrom(NUMBERS)).join("");
     } else if (mode === "mixed") {
       const source = LETTERS + NUMBERS;
       exercise = Array.from({ length: group }, () => randomFrom(source)).join("");
-    } else if (mode === "words") {
-      const source = wordSet === "halloween" ? HALLOWEEN_WORDS : WORDS;
-      const lengthAllowance = wordSet === "halloween" ? group + 4 : group + 2;
+    } else if (mode === "words" || mode === "halloween") {
+      const source = mode === "halloween" ? HALLOWEEN_WORDS : WORDS;
+      const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
       const possible = source.filter((word) => word.length <= lengthAllowance);
       exercise = randomFrom(possible.length ? possible : source);
     } else {
@@ -94,7 +92,7 @@
   }
 
   function updateSummary() {
-    const groupText = $("mode-select").value === "words" ? "word" : "char";
+    const groupText = ["words", "halloween"].includes($("mode-select").value) ? "word" : "char";
     $("summary").textContent = `${$("group-select").value} ${groupText} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
@@ -389,7 +387,6 @@
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
     $("mode-select").addEventListener("change", generateExercise);
-    $("word-set-select").addEventListener("change", generateExercise);
     $("group-select").addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
     $("start-button").addEventListener("click", startTransmission);
