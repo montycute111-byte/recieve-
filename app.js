@@ -24,6 +24,14 @@
     "RITUAL", "SCARY", "SCREAM", "SHADOW", "SKELETON", "SPELL", "SPIDER", "SPOOK", "SPOOKY", "TREAT", "TRICK", "VAMPIRE",
     "WARLOCK", "WEB", "WITCH", "WOLF", "ZOMBIE"
   ];
+  const SENTENCES = [
+    "THE RADIO IS READY.", "SEND THE NEXT MESSAGE.", "LISTEN FOR THE SIGNAL.", "THE NIGHT IS CALM.",
+    "MEET AT THE LIGHTHOUSE.", "COPY THE MESSAGE CLEARLY.", "PRACTICE MAKES PROGRESS.", "THE BEACON IS ON.",
+    "WAIT FOR THE NEXT TONE.", "THE WEATHER IS CLEAR.", "KEEP YOUR COPY STEADY.", "CALL WHEN YOU ARE READY.",
+    "THE SIGNAL IS STRONG.", "TURN THE VOLUME DOWN.", "MORSE CODE TAKES PRACTICE.", "THE TRAIN ARRIVES AT NOON.",
+    "THE BAT FLIES AT MIDNIGHT.", "THE GHOST IS IN THE HOUSE.", "PUMPKINS GLOW AFTER DARK.", "WATCH FOR THE BLACK CAT.",
+    "TRICK OR TREAT TONIGHT.", "THE MOON IS BRIGHT.", "A QUIET SIGNAL CARRIES FAR.", "THE OPERATOR COPIED IT RIGHT."
+  ];
   const STORAGE_KEY = "morseReceiveSettings";
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
@@ -77,6 +85,8 @@
       const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
       const possible = source.filter((word) => word.length <= lengthAllowance);
       exercise = randomFrom(possible.length ? possible : source);
+    } else if (mode === "sentences") {
+      exercise = randomFrom(SENTENCES);
     } else {
       exercise = Array.from({ length: group }, () => randomFrom(LETTERS)).join("");
     }
@@ -92,8 +102,9 @@
   }
 
   function updateSummary() {
-    const groupText = ["words", "halloween"].includes($("mode-select").value) ? "word" : "char";
-    $("summary").textContent = `${$("group-select").value} ${groupText} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
+    const mode = $("mode-select").value;
+    const exerciseType = mode === "sentences" ? "Sentence" : `${$("group-select").value} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
+    $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateProgress(index) {
@@ -311,7 +322,8 @@
     if (playback.countdown || !exercise) return;
     const lastIndex = Math.max(0, [...exercise].reduce((last, character, index) => character === " " ? last : index, 0));
     const current = playback.currentIndex >= exercise.length ? exercise.length : playback.currentIndex;
-    const target = current >= exercise.length ? lastIndex : Math.max(0, current - 1);
+    let target = current >= exercise.length ? lastIndex : Math.max(0, current - 1);
+    while (target > 0 && exercise[target] === " ") target -= 1;
     playback.runId += 1;
     stopCurrentTone();
     playback.active = false;
