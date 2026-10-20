@@ -40,7 +40,16 @@
     "THE WITCH BREWS A MAGIC POTION.", "THE HAUNTED HOUSE IS VERY QUIET.", "A PHANTOM WALKS THROUGH THE MIST.",
     "THE OWL FLIES PAST THE WINDOW.", "THE MONSTER HIDES BEHIND THE TREE.", "THE CANDY BOWL IS FULL TONIGHT.",
     "A RAVEN SITS ON THE OLD GATE.", "THE SPELL BEGINS AFTER DARK.", "THE MUMMY WAKES AT MIDNIGHT.",
-    "THE CEMETERY GATE CREAKS OPEN.", "A BLACK BAT CIRCLES THE HOUSE.", "THE PUMPKINS LINE THE PATH."
+    "THE CEMETERY GATE CREAKS OPEN.", "A BLACK BAT CIRCLES THE HOUSE.", "THE PUMPKINS LINE THE PATH.",
+    "THE FULL MOON SHINES ON THE CASTLE.", "A CANDLE FLICKERS IN THE WINDOW.", "THE WITCH HIDES A KEY IN THE COBWEB.",
+    "THE GHOST DRIFTS THROUGH THE ATTIC.", "A PUMPKIN ROLLS DOWN THE HILL.", "THE VAMPIRE HEARS A SOUND OUTSIDE.",
+    "THE OLD SPELL OPENS THE SECRET DOOR.", "A SKELETON RATTLES ITS BONES.", "THE OWL GUARDS THE HAUNTED TREE.",
+    "THE GOBLIN LAUGHS BESIDE THE FIRE.", "A BLACK CAT CROSSES THE PATH.", "THE CROW FLIES OVER THE GRAVE.",
+    "THE MOONLIGHT FILLS THE EMPTY ROOM.", "A MUMMY WALKS THROUGH THE SAND.", "THE CAULDRON SMOKES IN THE KITCHEN.",
+    "THE MONSTER SLEEPS UNDER THE BED.", "A RAVEN KNOCKS ON THE WINDOW.", "THE WITCH LIGHTS THREE CANDLES.",
+    "THE HAUNTED CLOCK STRIKES TWELVE.", "A BAT HIDES IN THE OLD BARN.", "THE PHANTOM WAITS BY THE GATE.",
+    "THE PUMPKIN PATCH GLOWS AT NIGHT.", "A WOLF HOWLS BEHIND THE HOUSE.", "THE CEMETERY IS QUIET TONIGHT.",
+    "THE SPELL FADES AT SUNRISE.", "A GHOST RINGS THE DOORBELL.", "THE CANDY DISAPPEARS FROM THE BOWL."
   ];
   const STORAGE_KEY = "morseReceiveSettings";
   const STANDARD = {
@@ -50,6 +59,7 @@
   };
 
   const $ = (id) => document.getElementById(id);
+  const exercisePools = new Map();
   const settings = loadSettings();
   const playback = {
     active: false, paused: false, countdown: false, currentIndex: 0,
@@ -72,6 +82,38 @@
 
   function randomFrom(value) {
     return value[Math.floor(Math.random() * value.length)];
+  }
+
+  function drawUnused(source, key, preferredSource = source) {
+    let used = exercisePools.get(key);
+    if (!(used instanceof Set)) {
+      used = new Set();
+      exercisePools.set(key, used);
+    }
+    let available = preferredSource.filter((item) => !used.has(item));
+    if (!available.length) available = source.filter((item) => !used.has(item));
+    if (!available.length) {
+      used.clear();
+      available = source;
+    }
+    const selected = randomFrom(available);
+    used.add(selected);
+    return selected;
+  }
+
+  function randomSequence(source, length, key) {
+    const universeSize = source.length ** length;
+    let used = exercisePools.get(key);
+    if (!(used instanceof Set) || used.size >= universeSize) {
+      used = new Set();
+      exercisePools.set(key, used);
+    }
+    let selected;
+    do {
+      selected = Array.from({ length }, () => randomFrom(source)).join("");
+    } while (used.has(selected));
+    used.add(selected);
+    return selected;
   }
 
   function letterCount(text) {
@@ -100,19 +142,20 @@
     const mode = $("mode-select").value;
     const group = Number($("group-select").value);
     if (mode === "numbers") {
-      exercise = Array.from({ length: group }, () => randomFrom(NUMBERS)).join("");
+      exercise = randomSequence(NUMBERS, group, `${mode}:${group}`);
     } else if (mode === "mixed") {
       const source = LETTERS + NUMBERS;
-      exercise = Array.from({ length: group }, () => randomFrom(source)).join("");
+      exercise = randomSequence(source, group, `${mode}:${group}`);
     } else if (mode === "words" || mode === "halloween") {
       const source = mode === "halloween" ? HALLOWEEN_WORDS : WORDS;
       const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
       const possible = source.filter((word) => word.length <= lengthAllowance);
-      exercise = randomFrom(possible.length ? possible : source);
+      exercise = drawUnused(source, mode, possible.length ? possible : source);
     } else if (mode === "sentences" || mode === "halloween-sentences") {
-      exercise = randomFrom(mode === "halloween-sentences" ? HALLOWEEN_SENTENCES : SENTENCES);
+      const source = mode === "halloween-sentences" ? HALLOWEEN_SENTENCES : SENTENCES;
+      exercise = drawUnused(source, mode);
     } else {
-      exercise = Array.from({ length: group }, () => randomFrom(LETTERS)).join("");
+      exercise = randomSequence(LETTERS, group, `${mode}:${group}`);
     }
     playback.currentIndex = 0;
     updateProgress(0);
