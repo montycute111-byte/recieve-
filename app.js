@@ -258,6 +258,7 @@
       const characterUnit = 1200 / Number(settings.characterWpm);
       const effectiveUnit = 1200 / Number(settings.effectiveWpm);
       const letterGap = Math.max(characterUnit * 3, effectiveUnit * 3);
+      const wordGap = Math.max(characterUnit * 7, effectiveUnit * 7);
       for (let index = playback.currentIndex; index < exercise.length; index += 1) {
         if (runId !== playback.runId) return;
         if (exercise[index] === " ") continue;
@@ -265,7 +266,9 @@
         updateProgress(index);
         setStatus(`Letter ${letterNumber(index)}`);
         if (!(await playCharacter(exercise[index], runId))) return;
-        if (index < exercise.length - 1) await sleep(letterGap);
+        if (index < exercise.length - 1) {
+          await sleep(exercise[index + 1] === " " ? wordGap : letterGap);
+        }
       }
       if (settings.silenceAfter > 0 && runId === playback.runId) await sleep(Number(settings.silenceAfter) * 1000);
       if (runId !== playback.runId) return;
