@@ -16,6 +16,14 @@
     "RADIO", "SIGNAL", "RECEIVE", "COPY", "PRACTICE", "MORSE", "LISTEN", "READY", "DECODE", "OPERATOR", "CONTACT", "BEACON",
     "ALERT", "ANSWER", "ARRIVE", "ARROW", "AUDIO", "AUTUMN", "AWAKE", "BACK", "BASIC", "BEACH", "BEAM", "BEGIN", "BETTER", "BIRD", "BLACK", "BLUE", "BOARD", "BOLD", "BOOK", "BRAVE", "BRIDGE", "BRIGHT", "BROAD", "BROWN", "BUILD", "CABLE", "CALL", "CALM", "CAMP", "CANAL", "CARRY", "CHAIN", "CHANGE", "CHARLIE", "CHECK", "CLEAR", "CLOCK", "CLOSE", "CLOUD", "COAST", "CODE", "COFFEE", "COLD", "COMET", "COMMON", "COMPASS", "CORRECT", "COUNT", "COURSE", "COVER", "CROSS", "CYCLE", "DASH", "DATA", "DAWN", "DELAY", "DELTA", "DEPTH", "DIAMOND", "DIGIT", "DIRECT", "DOOR", "DOT", "DOWN", "DRIVE", "EAGLE", "EARLY", "EARTH", "ECHO", "EIGHT", "ELBOW", "ELECTRIC", "EMPTY", "ENTER", "EQUAL", "ERROR", "EVENT", "EVERY", "EXACT", "EXTRA", "FAMILY", "FAST", "FIELD", "FIFTH", "FINAL", "FIRE", "FIRST", "FIVE", "FLASH", "FLAT", "FOCUS", "FORWARD", "FOUR", "FRAME", "FREQUENCY", "FRIDAY", "FRONT", "FROST", "FULL", "GATE", "GATHER", "GENTLE", "GHOST", "GIVE", "GLASS", "GLOBE", "GOAL", "GOLD", "GOOD", "GREEN", "GROUP", "GUARD", "GUIDE", "HALF", "HAND", "HARBOR", "HARD", "HEAR", "HEART", "HEAVY", "HELLO", "HELP", "HIGH", "HOLD", "HOME", "HORIZON", "HOTEL", "HOUR", "HOUSE", "IDEA", "IMAGE", "INDEX", "INPUT", "ISLAND", "JULIET", "JUMP", "KEEP", "KEY", "KIND", "KILO", "KNOW", "LAMP", "LARGE", "LASER", "LAST", "LATE", "LAUNCH", "LEARN", "LEFT", "LIGHT", "LINE", "LINK", "LION", "LOCAL", "LOGIC", "LONG", "LOW", "LUCKY", "MAGIC", "MAIN", "MAP", "MARCH", "MARK", "MAYBE", "MEET", "MESSAGE", "METER", "MIDDLE", "MILE", "MINUTE", "MIXED", "MOON", "MORNING", "MOTION", "MOUNTAIN", "MUSIC", "NARROW", "NIGHT", "NORTH", "NOTE", "OCEAN", "OCTOBER", "OFF", "ONWARD", "OPEN", "ORANGE", "ORDER", "OTHER", "OUTER", "PAPER", "PARADE", "PART", "PAUSE", "PEACE", "PEARL", "PHONE", "PILOT", "PLAIN", "PLAN", "PLANT", "PLUTO", "POINT", "POWER", "PRESS", "PRIME", "PROPER", "PULSE", "QUICK", "QUIET", "RADAR", "RANGE", "RAPID", "REPEAT", "REPORT", "RESCUE", "RIGHT", "RIVER", "ROGER", "ROUND", "ROUTE", "ROYAL", "SAME", "SCHOOL", "SECOND", "SEVEN", "SHADOW", "SHARE", "SHIFT", "SHORT", "SHOW", "SIMPLE", "SIX", "SKY", "SLOW", "SMALL", "SOLAR", "SOUND", "SOUTH", "SPACE", "SPEED", "SPELL", "STAR", "START", "STATION", "STEADY", "STONE", "STOP", "STORM", "STREET", "STRONG", "SUMMER", "SUN", "SWIFT", "TABLE", "TAKE", "TEAM", "TEN", "THREE", "THUNDER", "TIGER", "TONE", "TRACK", "TRAIN", "TRANSIT", "TRAVEL", "TREE", "TRUST", "TUNE", "TWO", "UNDER", "UNION", "UNIQUE", "UNIT", "UPPER", "VALUE", "VOICE", "WATER", "WAVE", "WAY", "WEST", "WHISPER", "WHITE", "WHOLE", "WINDOW", "WINTER", "WISDOM", "WOLF", "WOMAN", "WORD", "WORK", "WORLD", "WRITE", "YEAR", "YELLOW", "YOUNG", "ZERO", "ZULU"
   ];
+  const HALLOWEEN_WORDS = [
+    "AUTUMN", "BAT", "BLACK", "BONES", "BOO", "BROOM", "CANDLE", "CANDY", "CAPE", "CASKET", "CAULDRON", "CEMETERY",
+    "CLOAK", "COBWEB", "COSTUME", "COVEN", "CREEPY", "CROW", "DARK", "DEMON", "DRACULA", "EERIE", "FANG", "FRIGHT",
+    "GHOST", "GHOUL", "GOBLIN", "GRAVE", "HAUNT", "HAUNTED", "HARVEST", "HOWL", "JACKOLANTERN", "MAGIC", "MASK",
+    "MIDNIGHT", "MOON", "MONSTER", "MUMMY", "NIGHT", "OCTOBER", "ORANGE", "OWL", "PHANTOM", "POTION", "PUMPKIN", "RAVEN",
+    "RITUAL", "SCARY", "SCREAM", "SHADOW", "SKELETON", "SPELL", "SPIDER", "SPOOK", "SPOOKY", "TREAT", "TRICK", "VAMPIRE",
+    "WARLOCK", "WEB", "WITCH", "WOLF", "ZOMBIE"
+  ];
   const STORAGE_KEY = "morseReceiveSettings";
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
@@ -58,6 +66,8 @@
 
   function generateExercise() {
     const mode = $("mode-select").value;
+    const wordSet = $("word-set-select").value;
+    $("word-set-control").hidden = mode !== "words";
     const group = Number($("group-select").value);
     if (mode === "numbers") {
       exercise = Array.from({ length: group }, () => randomFrom(NUMBERS)).join("");
@@ -65,8 +75,10 @@
       const source = LETTERS + NUMBERS;
       exercise = Array.from({ length: group }, () => randomFrom(source)).join("");
     } else if (mode === "words") {
-      const possible = WORDS.filter((word) => word.length <= group + 2);
-      exercise = randomFrom(possible.length ? possible : WORDS);
+      const source = wordSet === "halloween" ? HALLOWEEN_WORDS : WORDS;
+      const lengthAllowance = wordSet === "halloween" ? group + 4 : group + 2;
+      const possible = source.filter((word) => word.length <= lengthAllowance);
+      exercise = randomFrom(possible.length ? possible : source);
     } else {
       exercise = Array.from({ length: group }, () => randomFrom(LETTERS)).join("");
     }
@@ -377,6 +389,7 @@
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
     $("mode-select").addEventListener("change", generateExercise);
+    $("word-set-select").addEventListener("change", generateExercise);
     $("group-select").addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
     $("start-button").addEventListener("click", startTransmission);
