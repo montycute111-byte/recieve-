@@ -69,6 +69,7 @@
     }
     playback.currentIndex = 0;
     updateProgress(0);
+    setStatus("Letter 1");
     $("answer-input").value = "";
     $("submit-button").disabled = true;
     $("score-label").textContent = "";
@@ -203,7 +204,7 @@
     for (const second of seconds) {
       if (runId !== playback.runId) return false;
       $("countdown-label").textContent = String(second);
-      setStatus("Get ready to receive");
+      setStatus(`Letter ${letterNumber(playback.currentIndex)}`);
       await sleep(700);
     }
     $("countdown-label").textContent = "";
@@ -226,7 +227,7 @@
     $("stop-button").disabled = false;
     $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     updateProgress(playback.currentIndex);
-    setStatus("Listening…");
+    setStatus(`Letter ${letterNumber(playback.currentIndex)}`);
     try {
       await ensureAudio();
       if (settings.silenceBefore > 0) await sleep(Number(settings.silenceBefore) * 1000);
@@ -238,6 +239,7 @@
         if (exercise[index] === " ") continue;
         playback.currentIndex = index;
         updateProgress(index);
+        setStatus(`Letter ${letterNumber(index)}`);
         if (!(await playCharacter(exercise[index], runId))) return;
         if (index < exercise.length - 1) await sleep(letterGap);
       }
@@ -247,7 +249,7 @@
       playback.currentIndex = exercise.length;
       disarmAnswerInput();
       updateProgress(exercise.length);
-      setStatus("Transmission complete");
+      setStatus(`Letter ${letterNumber(Math.max(0, exercise.length - 1))}`);
       $("listening-window").classList.remove("is-playing");
       $("start-button").disabled = false;
       $("replay-button").disabled = false;
@@ -258,7 +260,7 @@
       playback.active = false;
       disarmAnswerInput();
       $("listening-window").classList.remove("is-playing");
-      setStatus("Ready for the next transmission");
+      setStatus(`Letter ${letterNumber(Math.max(0, playback.currentIndex))}`);
       $("start-button").disabled = false;
       $("replay-button").disabled = false;
       $("pause-button").disabled = true;
@@ -273,7 +275,7 @@
       playback.paused = false;
       if (playback.audio?.state === "suspended") await playback.audio.resume();
       $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
-      setStatus("Listening…");
+      setStatus(`Letter ${letterNumber(playback.currentIndex)}`);
       return;
     }
     if (playback.active) return;
@@ -303,7 +305,7 @@
     playback.paused = false;
     disarmAnswerInput();
     $("countdown-label").textContent = "";
-    setStatus(`Rewound to letter ${letterNumber(target)}`);
+    setStatus(`Letter ${letterNumber(target)}`);
     playFrom(target);
   }
 
@@ -321,14 +323,14 @@
     $("pause-button").disabled = true;
     $("stop-button").disabled = true;
     $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
-    setStatus("Ready for the next transmission");
+    setStatus(`Letter ${letterNumber(Math.min(playback.currentIndex, Math.max(0, exercise.length - 1)))}`);
   }
 
   function togglePause() {
     if (!playback.active || playback.countdown) return;
     playback.paused = !playback.paused;
     $("pause-button").innerHTML = playback.paused ? "▶ <span>Resume</span>" : "Ⅱ <span>Pause</span>";
-    setStatus(playback.paused ? "Paused" : "Listening…");
+    setStatus(`Letter ${letterNumber(playback.currentIndex)}${playback.paused ? " · Paused" : ""}`);
   }
 
   function scoreAnswer() {
