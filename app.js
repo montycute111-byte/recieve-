@@ -69,17 +69,27 @@
   let exercise = "";
   let lastAnswerCorrect = false;
   let awaitingNext = false;
+  let listenExercise = "";
+  let listenAwaitingNext = false;
+  const listenPlayback = {
+    active: false, paused: false, countdown: false, currentIndex: 0,
+    runId: 0, audio: null, oscillator: null
+  };
 
   function loadSettings() {
     try {
-      return { ...STANDARD, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") };
+      return { ...STANDARD, ...JSON.parse(window.localStorage?.getItem(STORAGE_KEY) || "{}") };
     } catch (_) {
       return { ...STANDARD };
     }
   }
 
   function saveSettings() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    try {
+      window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(settings));
+    } catch (_) {
+      // Settings remain active for the current session if storage is blocked.
+    }
   }
 
   function randomFrom(value) {
@@ -153,6 +163,28 @@
     return positionLabel(index).replace(/ of \d+ letters$/, "");
   }
 
+  function listenLetterNumber(index) {
+    return [...listenExercise.slice(0, index)].filter((char) => char !== " ").length + 1;
+  }
+
+  function listenPositionLabel(index) {
+    const mode = $("listen-mode-select").value;
+    const safeIndex = Math.min(Math.max(0, index), Math.max(0, listenExercise.length - 1));
+    const totalLetters = letterCount(listenExercise);
+    if (!["sentences", "halloween-sentences", "words", "halloween"].includes(mode)) {
+      return `Letter ${listenLetterNumber(safeIndex)} of ${totalLetters} letters`;
+    }
+    const throughCurrent = listenExercise.slice(0, safeIndex + 1);
+    const wordNumber = throughCurrent.trim().split(/\s+/).length;
+    const wordStart = Math.max(0, throughCurrent.lastIndexOf(" ") + 1);
+    const letterInWord = [...listenExercise.slice(wordStart, safeIndex + 1)].filter((char) => char !== " ").length;
+    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)} of ${totalLetters} letters`;
+  }
+
+  function compactListenPositionLabel(index) {
+    return listenPositionLabel(index).replace(/ of \d+ letters$/, "");
+  }
+
   function generateExercise() {
     const mode = $("mode-select").value;
     const group = Number($("group-select").value);
@@ -188,18 +220,58 @@
     notifyRpg("exercise-start", { mode, text: exercise });
   }
 
+  function generateListenExercise() {
+    const mode = $("listen-mode-select").value;
+    const group = Number($("listen-group-select").value);
+    if (mode === "numbers") {
+      listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
+    } else if (mode === "mixed") {
+      listenExercise = randomSequence(LETTERS + NUMBERS, group, `listen:${mode}:${group}`);
+    } else if (mode === "words" || mode === "halloween") {
+      const source = mode === "halloween" ? HALLOWEEN_WORDS : WORDS;
+      const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
+      const possible = source.filter((word) => word.length <= lengthAllowance);
+      listenExercise = drawUnused(source, `listen:${mode}`, possible.length ? possible : source);
+    } else if (mode === "sentences" || mode === "halloween-sentences") {
+      const source = mode === "halloween-sentences" ? HALLOWEEN_SENTENCES : SENTENCES;
+      listenExercise = drawUnused(source, `listen:${mode}`);
+    } else {
+      listenExercise = randomSequence(LETTERS, group, `listen:${mode}:${group}`);
+    }
+    listenPlayback.currentIndex = 0;
+    listenAwaitingNext = false;
+    updateListenProgress(0);
+    setListenStatus(compactListenPositionLabel(0));
+    $("listen-countdown-label").textContent = "";
+    $("listen-next-button").hidden = true;
+    $("listen-start-button").hidden = false;
+    $("listen-start-button").disabled = false;
+    updateListenSummary();
+  }
+
   function updateSummary() {
     const mode = $("mode-select").value;
     const exerciseType = isSentenceMode() ? "Sentence" : `${$("group-select").value} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
+  function updateListenSummary() {
+    const mode = $("listen-mode-select").value;
+    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : `${$("listen-group-select").value} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
+    $("listen-summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
+  }
+
   function updateProgress(index) {
     $("progress-label").textContent = positionLabel(index);
   }
 
+  function updateListenProgress(index) {
+    $("listen-progress-label").textContent = listenPositionLabel(index);
+  }
+
   function updateProfile() {
     $("profile-label").textContent = settings.profileName.trim() || "Operator";
+    $("listen-profile-label").textContent = settings.profileName.trim() || "Operator";
     $("profile-name").value = settings.profileName;
   }
 
@@ -219,6 +291,7 @@
     $("before-value").textContent = `${Number(settings.silenceBefore).toFixed(1)}s`;
     $("after-value").textContent = `${Number(settings.silenceAfter).toFixed(1)}s`;
     updateSummary();
+    updateListenSummary();
   }
 
   function showToast(message) {
@@ -231,6 +304,10 @@
 
   function setStatus(message) {
     $("status-label").textContent = message;
+  }
+
+  function setListenStatus(message) {
+    $("listen-status-label").textContent = message;
   }
 
   function notifyRpg(eventName, detail = {}) {
@@ -475,6 +552,236 @@
     setStatus(`${compactPositionLabel(playback.currentIndex)}${playback.paused ? " · Paused" : ""}`);
   }
 
+  async function listenWaitForResume(runId) {
+    while (listenPlayback.paused && listenPlayback.runId === runId) await sleep(50);
+    return listenPlayback.runId === runId;
+  }
+
+  async function ensureListenAudio() {
+    if (!listenPlayback.audio) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) throw new Error("Web Audio is not supported in this browser.");
+      listenPlayback.audio = new AudioContextClass();
+    }
+    if (listenPlayback.audio.state === "suspended") await listenPlayback.audio.resume();
+  }
+
+  function stopListenTone() {
+    if (listenPlayback.oscillator) {
+      try { listenPlayback.oscillator.stop(); } catch (_) { /* already stopped */ }
+      listenPlayback.oscillator = null;
+    }
+  }
+
+  function playListenTone(milliseconds, runId) {
+    return new Promise((resolve) => {
+      if (!listenPlayback.audio || runId !== listenPlayback.runId) return resolve(false);
+      const context = listenPlayback.audio;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const now = context.currentTime;
+      const duration = Math.max(0.025, milliseconds / 1000);
+      const volume = Math.max(0, Math.min(1, settings.volume / 100));
+      oscillator.frequency.value = Number(settings.frequency);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(volume * 0.82, now + 0.006);
+      gain.gain.setValueAtTime(volume * 0.82, now + Math.max(0.008, duration - 0.012));
+      gain.gain.linearRampToValueAtTime(0, now + duration);
+      oscillator.connect(gain).connect(context.destination);
+      listenPlayback.oscillator = oscillator;
+      oscillator.onended = () => {
+        if (listenPlayback.oscillator === oscillator) listenPlayback.oscillator = null;
+        resolve(runId === listenPlayback.runId);
+      };
+      oscillator.start(now);
+      oscillator.stop(now + duration + 0.015);
+    });
+  }
+
+  async function playListenCharacter(character, runId) {
+    const code = MORSE[character.toUpperCase()];
+    if (!code) return true;
+    const unit = 1200 / Number(settings.characterWpm);
+    for (const mark of code) {
+      if (!(await listenWaitForResume(runId))) return false;
+      if (!(await playListenTone(mark === "." ? unit : unit * 3, runId))) return false;
+      await sleep(unit);
+      if (runId !== listenPlayback.runId) return false;
+    }
+    return true;
+  }
+
+  async function listenCountdown(runId) {
+    listenPlayback.countdown = true;
+    for (const second of [3, 2, 1]) {
+      if (runId !== listenPlayback.runId) return false;
+      $("listen-countdown-label").textContent = String(second);
+      setListenStatus(compactListenPositionLabel(listenPlayback.currentIndex));
+      await sleep(700);
+    }
+    $("listen-countdown-label").textContent = "";
+    listenPlayback.countdown = false;
+    return runId === listenPlayback.runId;
+  }
+
+  async function playListenFrom(startIndex) {
+    const runId = ++listenPlayback.runId;
+    listenPlayback.active = true;
+    listenPlayback.paused = false;
+    listenPlayback.countdown = false;
+    listenPlayback.currentIndex = Math.max(0, Math.min(startIndex, Math.max(0, listenExercise.length - 1)));
+    $("listen-listening-window").classList.add("is-playing");
+    $("listen-start-button").disabled = true;
+    $("listen-start-button").hidden = true;
+    $("listen-replay-button").disabled = true;
+    $("listen-rewind-button").disabled = false;
+    $("listen-pause-button").disabled = false;
+    $("listen-stop-button").disabled = false;
+    $("listen-next-button").hidden = true;
+    $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
+    updateListenProgress(listenPlayback.currentIndex);
+    setListenStatus(compactListenPositionLabel(listenPlayback.currentIndex));
+    notifyRpg("playback-start", { mode: $("listen-mode-select").value });
+    try {
+      await ensureListenAudio();
+      if (settings.silenceBefore > 0) await sleep(Number(settings.silenceBefore) * 1000);
+      const characterUnit = 1200 / Number(settings.characterWpm);
+      const effectiveUnit = 1200 / Number(settings.effectiveWpm);
+      const letterGap = Math.max(characterUnit * 3, effectiveUnit * 3);
+      const wordGap = Math.max(characterUnit * 7, effectiveUnit * 7);
+      for (let index = listenPlayback.currentIndex; index < listenExercise.length; index += 1) {
+        if (runId !== listenPlayback.runId) return;
+        if (listenExercise[index] === " ") continue;
+        listenPlayback.currentIndex = index;
+        updateListenProgress(index);
+        setListenStatus(compactListenPositionLabel(index));
+        if (!(await playListenCharacter(listenExercise[index], runId))) return;
+        if (index < listenExercise.length - 1) await sleep(listenExercise[index + 1] === " " ? wordGap : letterGap);
+      }
+      if (settings.silenceAfter > 0 && runId === listenPlayback.runId) await sleep(Number(settings.silenceAfter) * 1000);
+      if (runId !== listenPlayback.runId) return;
+      notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: true });
+      listenPlayback.active = false;
+      listenPlayback.currentIndex = listenExercise.length;
+      listenAwaitingNext = true;
+      updateListenProgress(Math.max(0, listenExercise.length - 1));
+      setListenStatus(compactListenPositionLabel(Math.max(0, listenExercise.length - 1)));
+      $("listen-listening-window").classList.remove("is-playing");
+      $("listen-start-button").hidden = true;
+      $("listen-replay-button").disabled = false;
+      $("listen-pause-button").disabled = true;
+      $("listen-stop-button").disabled = true;
+      $("listen-next-button").hidden = false;
+    } catch (error) {
+      if (runId !== listenPlayback.runId) return;
+      notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: false });
+      listenPlayback.active = false;
+      $("listen-listening-window").classList.remove("is-playing");
+      setListenStatus(compactListenPositionLabel(Math.max(0, listenPlayback.currentIndex)));
+      $("listen-start-button").disabled = false;
+      $("listen-start-button").hidden = false;
+      $("listen-replay-button").disabled = false;
+      $("listen-pause-button").disabled = true;
+      $("listen-stop-button").disabled = true;
+      showToast(error.message);
+    }
+  }
+
+  async function startListenTransmission() {
+    if (listenPlayback.active && listenPlayback.paused) {
+      listenPlayback.paused = false;
+      if (listenPlayback.audio?.state === "suspended") await listenPlayback.audio.resume();
+      $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
+      setListenStatus(compactListenPositionLabel(listenPlayback.currentIndex));
+      return;
+    }
+    if (listenPlayback.active) return;
+    if (!listenExercise) generateListenExercise();
+    const runId = ++listenPlayback.runId;
+    listenPlayback.active = true;
+    listenPlayback.countdown = settings.countdown;
+    $("listen-start-button").disabled = true;
+    $("listen-start-button").hidden = true;
+    $("listen-replay-button").disabled = true;
+    $("listen-rewind-button").disabled = false;
+    $("listen-pause-button").disabled = false;
+    $("listen-stop-button").disabled = false;
+    try {
+      await ensureListenAudio();
+    } catch (error) {
+      listenPlayback.active = false;
+      listenPlayback.countdown = false;
+      $("listen-start-button").disabled = false;
+      $("listen-start-button").hidden = false;
+      $("listen-replay-button").disabled = false;
+      $("listen-pause-button").disabled = true;
+      $("listen-stop-button").disabled = true;
+      showToast(error.message);
+      return;
+    }
+    if (settings.countdown && !(await listenCountdown(runId))) return;
+    if (runId !== listenPlayback.runId) return;
+    listenPlayback.active = false;
+    await playListenFrom(0);
+  }
+
+  function listenRewindOneLetter() {
+    if (listenPlayback.countdown || !listenExercise) return;
+    const lastIndex = Math.max(0, [...listenExercise].reduce((last, character, index) => character === " " ? last : index, 0));
+    const current = listenPlayback.currentIndex >= listenExercise.length ? listenExercise.length : listenPlayback.currentIndex;
+    let target = current >= listenExercise.length ? lastIndex : Math.max(0, current - 1);
+    while (target > 0 && listenExercise[target] === " ") target -= 1;
+    notifyRpg("rewind", { mode: $("listen-mode-select").value });
+    listenPlayback.runId += 1;
+    stopListenTone();
+    listenPlayback.active = false;
+    listenPlayback.paused = false;
+    listenAwaitingNext = false;
+    $("listen-next-button").hidden = true;
+    setListenStatus(compactListenPositionLabel(target));
+    playListenFrom(target);
+  }
+
+  function stopListenTransmission() {
+    notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: false });
+    listenPlayback.runId += 1;
+    stopListenTone();
+    listenPlayback.active = false;
+    listenPlayback.paused = false;
+    listenPlayback.countdown = false;
+    listenAwaitingNext = false;
+    $("listen-countdown-label").textContent = "";
+    $("listen-listening-window").classList.remove("is-playing");
+    $("listen-start-button").disabled = false;
+    $("listen-start-button").hidden = false;
+    $("listen-replay-button").disabled = false;
+    $("listen-pause-button").disabled = true;
+    $("listen-stop-button").disabled = true;
+    $("listen-next-button").hidden = true;
+    $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
+    setListenStatus(compactListenPositionLabel(Math.min(listenPlayback.currentIndex, Math.max(0, listenExercise.length - 1))));
+  }
+
+  function toggleListenPause() {
+    if (!listenPlayback.active || listenPlayback.countdown) return;
+    listenPlayback.paused = !listenPlayback.paused;
+    if (listenPlayback.paused) notifyRpg("pause", { mode: $("listen-mode-select").value });
+    $("listen-pause-button").innerHTML = listenPlayback.paused ? "▶ <span>Resume</span>" : "Ⅱ <span>Pause</span>";
+    setListenStatus(`${compactListenPositionLabel(listenPlayback.currentIndex)}${listenPlayback.paused ? " · Paused" : ""}`);
+  }
+
+  function continueListenToNext() {
+    if (!listenAwaitingNext) return;
+    stopListenTransmission();
+    generateListenExercise();
+    startListenTransmission();
+  }
+
+  function changeListenExercise() {
+    if (listenPlayback.active || listenPlayback.paused || listenAwaitingNext) stopListenTransmission();
+    generateListenExercise();
+  }
+
   function scoreAnswer(source = "submit") {
     const expected = exercise.trim().toUpperCase();
     const actual = $("answer-input").value.trim().toUpperCase().replace(/\s+/g, " ");
@@ -530,6 +837,7 @@
   }
 
   function switchView(viewName) {
+    if (viewName !== "listen-only" && (listenPlayback.active || listenPlayback.paused || listenAwaitingNext)) stopListenTransmission();
     document.querySelectorAll(".nav-item").forEach((button) => button.classList.toggle("active", button.dataset.view === viewName));
     document.querySelectorAll(".view").forEach((view) => view.classList.toggle("active", view.id === `${viewName}-view`));
   }
@@ -544,6 +852,15 @@
     $("rewind-button").addEventListener("click", rewindOneLetter);
     $("pause-button").addEventListener("click", togglePause);
     $("stop-button").addEventListener("click", stopTransmission);
+    $("listen-mode-select").addEventListener("change", changeListenExercise);
+    $("listen-group-select").addEventListener("change", changeListenExercise);
+    $("listen-session-select").addEventListener("change", () => showToast($("listen-session-select").value === "0" ? "Unlimited session selected" : `${$("listen-session-select").value}-minute session selected`));
+    $("listen-start-button").addEventListener("click", startListenTransmission);
+    $("listen-replay-button").addEventListener("click", () => { stopListenTransmission(); playListenFrom(0); });
+    $("listen-rewind-button").addEventListener("click", listenRewindOneLetter);
+    $("listen-pause-button").addEventListener("click", toggleListenPause);
+    $("listen-stop-button").addEventListener("click", stopListenTransmission);
+    $("listen-next-button").addEventListener("click", continueListenToNext);
     $("answer-input").addEventListener("pointerdown", armAnswerInput);
     $("answer-input").addEventListener("click", armAnswerInput);
     $("answer-input").addEventListener("input", (event) => {
@@ -579,6 +896,13 @@
       const answerInput = $("answer-input");
       const typingInAnswer = document.activeElement === answerInput && !answerInput.readOnly;
       const transmissionCanRewind = playback.active || playback.currentIndex >= exercise.length;
+      const listenTabActive = $("listen-only-view").classList.contains("active");
+      const listenCanRewind = listenPlayback.active || listenPlayback.currentIndex >= listenExercise.length;
+      if (event.code === "Space" && listenTabActive && listenCanRewind && !listenPlayback.countdown) {
+        event.preventDefault();
+        listenRewindOneLetter();
+        return;
+      }
       if (event.code === "Space" && transmissionCanRewind && !playback.countdown && !typingInAnswer) {
         event.preventDefault();
         rewindOneLetter();
@@ -591,5 +915,6 @@
   renderAlphabet();
   bindEvents();
   generateExercise();
+  generateListenExercise();
   disarmAnswerInput();
 })();
