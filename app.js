@@ -244,7 +244,7 @@
     setListenStatus(compactListenPositionLabel(0));
     $("listen-countdown-label").textContent = "";
     $("listen-next-button").hidden = true;
-    $("listen-next-button").disabled = true;
+    $("listen-next-button").disabled = false;
     $("listen-start-button").hidden = false;
     $("listen-start-button").disabled = false;
     updateListenSummary();
@@ -639,7 +639,7 @@
     $("listen-pause-button").disabled = false;
     $("listen-stop-button").disabled = false;
     $("listen-next-button").hidden = false;
-    $("listen-next-button").disabled = true;
+    $("listen-next-button").disabled = false;
     $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     updateListenProgress(listenPlayback.currentIndex);
     setListenStatus(compactListenPositionLabel(listenPlayback.currentIndex));
@@ -687,7 +687,7 @@
       $("listen-pause-button").disabled = true;
       $("listen-stop-button").disabled = true;
       $("listen-next-button").hidden = true;
-      $("listen-next-button").disabled = true;
+      $("listen-next-button").disabled = false;
       showToast(error.message);
     }
   }
@@ -712,7 +712,7 @@
     $("listen-pause-button").disabled = false;
     $("listen-stop-button").disabled = false;
     $("listen-next-button").hidden = false;
-    $("listen-next-button").disabled = true;
+    $("listen-next-button").disabled = false;
     try {
       await ensureListenAudio();
     } catch (error) {
@@ -745,7 +745,7 @@
     listenPlayback.paused = false;
     listenAwaitingNext = false;
     $("listen-next-button").hidden = false;
-    $("listen-next-button").disabled = true;
+    $("listen-next-button").disabled = false;
     setListenStatus(compactListenPositionLabel(target));
     playListenFrom(target);
   }
@@ -766,7 +766,7 @@
     $("listen-pause-button").disabled = true;
     $("listen-stop-button").disabled = true;
     $("listen-next-button").hidden = !keepNextButton;
-    $("listen-next-button").disabled = true;
+    $("listen-next-button").disabled = false;
     $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     setListenStatus(compactListenPositionLabel(Math.min(listenPlayback.currentIndex, Math.max(0, listenExercise.length - 1))));
   }
@@ -780,7 +780,7 @@
   }
 
   function continueListenToNext() {
-    if (!listenAwaitingNext) return;
+    if (!listenExercise) return;
     stopListenTransmission();
     generateListenExercise();
     startListenTransmission();
