@@ -64,7 +64,7 @@
   window.morseSettings = settings;
   const playback = {
     active: false, paused: false, countdown: false, currentIndex: 0,
-    runId: 0, audio: null, oscillator: null, toastTimer: null
+    runId: 0, audio: null, oscillator: null, toastTimer: null, successAudio: null
   };
   let exercise = "";
   let lastAnswerCorrect = false;
@@ -303,7 +303,7 @@
     playback.toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   }
 
-  function setStatus(message) {
+  function playPerfectCopySound(){if(!playback.successAudio){playback.successAudio=new Audio("assets/perfect-copy.mp3");playback.successAudio.volume=.9;}playback.successAudio.currentTime=0;const playPromise=playback.successAudio.play();if(playPromise?.catch)playPromise.catch(()=>{});} function setStatus(message) {
     $("status-label").textContent = message;
   }
 
@@ -810,7 +810,7 @@
     $("result").hidden = false;
     const reward = lastAnswerCorrect ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
     $("result").innerHTML = `${reward}<strong>Expected: ${escapeHtml(expected)}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
-    if (lastAnswerCorrect) showToast("Perfect copy! Great work.");
+    if (lastAnswerCorrect && source === "submit") { playPerfectCopySound(); showToast("Perfect copy! Great work."); }
     notifyRpg("score", { source, mode: $("mode-select").value, accuracy, matches, maxLength, expected, actual });
   }
 
