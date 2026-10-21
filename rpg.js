@@ -2,7 +2,6 @@
   "use strict";
 
   const STORAGE_KEY = "morseReceiveRpgProgress";
-  const SESSION_ID = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const RANKS = [
     { level: 1, name: "Signal Novice", icon: "◈" },
     { level: 3, name: "Signal Apprentice", icon: "◇" },
@@ -14,16 +13,6 @@
     { level: 36, name: "Morse Legend", icon: "♛" },
     { level: 45, name: "Grandmaster", icon: "♕" },
     { level: 55, name: "Morse Champion", icon: "☼" }
-  ];
-  const DIFFICULTIES = [
-    { id: "normal", label: "Normal", wpm: 5, xp: 0 },
-    { id: "hard", label: "Hard", wpm: 6, xp: 8 },
-    { id: "expert", label: "Expert", wpm: 7, xp: 12 },
-    { id: "nightmare", label: "Nightmare", wpm: 8, xp: 16 },
-    { id: "torment-1", label: "Torment I", wpm: 10, xp: 24 },
-    { id: "torment-2", label: "Torment II", wpm: 13, xp: 32 },
-    { id: "torment-3", label: "Torment III", wpm: 15, xp: 42 },
-    { id: "torment-4", label: "Torment IV", wpm: 20, xp: 55 }
   ];
   const STANDARD_QUESTS = [
     { id: "warm-up", title: "Warm-Up", description: "Decode 10 words correctly.", target: 10, reward: 25, metric: "words", group: "standard" },
@@ -69,7 +58,6 @@
     totalAccuracyCharacters: 0,
     totalRewinds: 0,
     totalPracticeMs: 0,
-    highestMasteredWpm: 0,
     successfulExercises: 0,
     perfectSentences: 0,
     sentencesNoRewind: 0,
@@ -78,7 +66,6 @@
     totalQuestsCompleted: 0,
     halloweenQuestsCompleted: 0,
     unlockedAchievements: [],
-    difficultySessions: {},
     daily: {
       date: "",
       questIds: [],
@@ -106,7 +93,6 @@
         ...fresh,
         ...saved,
         unlockedAchievements: Array.isArray(saved.unlockedAchievements) ? saved.unlockedAchievements.filter((id) => !REMOVED_ACHIEVEMENT_IDS.has(id)) : [],
-        difficultySessions: saved.difficultySessions && typeof saved.difficultySessions === "object" ? saved.difficultySessions : {},
         daily: { ...fresh.daily, ...(saved.daily || {}), questIds: Array.isArray((saved.daily || {}).questIds) ? saved.daily.questIds : [], progress: { ...fresh.daily.progress, ...((saved.daily || {}).progress || {}) }, completed: Array.isArray((saved.daily || {}).completed) ? saved.daily.completed : [] }
       };
     } catch (_) {
@@ -242,15 +228,6 @@
     return minutes ? `${minutes}m ${seconds}s` : `${seconds}s`;
   }
 
-  function currentDifficulty() {
-    const id = document.getElementById("difficulty-select")?.value;
-    return DIFFICULTIES.find((difficulty) => difficulty.id === id) || null;
-  }
-
-  function effectiveWpm() {
-    return Number(document.getElementById("effective-wpm")?.value || 0);
-  }
-
   function isWordMode(mode) {
     return mode === "words" || mode === "halloween";
   }
@@ -340,16 +317,6 @@
     renderAchievements();
   }
 
-  function recordDifficultyMastery() {
-    const difficulty = currentDifficulty();
-    if (!difficulty || effectiveWpm() < difficulty.wpm) return 0;
-    if (!state.difficultySessions[difficulty.id]) state.difficultySessions[difficulty.id] = { sessions: [] };
-    const sessions = state.difficultySessions[difficulty.id].sessions;
-    if (!sessions.includes(SESSION_ID)) sessions.push(SESSION_ID);
-    if (sessions.length >= 3) state.highestMasteredWpm = Math.max(state.highestMasteredWpm, difficulty.wpm);
-    return difficulty.xp;
-  }
-
   function checkAchievements() {
     ACHIEVEMENTS.forEach((achievement) => {
       const progress = achievement.getProgress(state);
@@ -418,7 +385,6 @@
     }
     if (!activeExercise.rewinds) xp += 25;
     if (!activeExercise.pauses) xp += 15;
-    xp += recordDifficultyMastery();
     if (state.perfectStreak % 5 === 0) xp += state.perfectStreak % 10 === 0 ? 200 : 100;
     if (effectiveWpm() >= 10) state.perfectAt10 += 1;
     state.daily.progress.characters += expected.replace(/\s/g, "").length;
@@ -450,7 +416,7 @@
       ["Total XP", state.totalXP], ["Level", data.level], ["Rank", rank.name], ["Overall accuracy", `${accuracy}%`],
       ["Words decoded", state.totalWords], ["Sentences decoded", state.totalSentences], ["Characters decoded", state.totalCharacters],
       ["Perfect streak", state.perfectStreak], ["Longest streak", state.longestPerfectStreak], ["Rewinds", state.totalRewinds],
-      ["Practice time", formatDuration(state.totalPracticeMs)], ["Highest mastered WPM", state.highestMasteredWpm || "—"],
+      ["Practice time", formatDuration(state.totalPracticeMs)],
       ["Daily streak", state.daily.currentStreak], ["Longest daily streak", state.daily.longestStreak], ["Successful days", state.daily.successfulDays],
       ["Quests completed", state.totalQuestsCompleted], ["Achievements", `${state.unlockedAchievements.length}/${ACHIEVEMENTS.length}`]
     ];
@@ -493,16 +459,6 @@
     if ($("daily-quests-bonus")) $("daily-quests-bonus").innerHTML = quests.filter((quest) => quest.group === "bonus").map(renderQuest).join("");
   }
 
-  function renderDifficulty() {
-    const selected = document.getElementById("difficulty-select")?.value;
-    if (!$('difficulty-grid')) return;
-    $("difficulty-grid").innerHTML = DIFFICULTIES.map((difficulty) => {
-      const sessions = state.difficultySessions[difficulty.id]?.sessions?.length || 0;
-      const mastered = sessions >= 3;
-      return `<button class="difficulty-card${selected === difficulty.id ? " selected" : ""}${mastered ? " mastered" : ""}" data-difficulty="${difficulty.id}" type="button"><span class="difficulty-mark">${mastered ? "✓" : difficulty.wpm}</span><span><strong>${escapeHtml(difficulty.label)}</strong><small>${difficulty.wpm} WPM · +${difficulty.xp} XP</small></span><em>${Math.min(3, sessions)}/3 sessions</em></button>`;
-    }).join("");
-  }
-
   function renderAchievements() {
     if ($("achievement-count")) $("achievement-count").textContent = `${state.unlockedAchievements.length}/${ACHIEVEMENTS.length} unlocked`;
     if (!$('achievement-grid')) return;
@@ -517,7 +473,6 @@
     renderProgression();
     renderStats();
     renderDaily();
-    renderDifficulty();
     renderAchievements();
   }
 
@@ -537,17 +492,7 @@
     });
     window.addEventListener("morse:pause", () => { activeExercise.pauses += 1; });
     window.addEventListener("morse:score", (event) => handleScore(event.detail));
-    window.addEventListener("morse:difficulty-change", renderDifficulty);
     window.setInterval(updateResetCountdown, 1000);
-    $("difficulty-grid")?.addEventListener("click", (event) => {
-      const card = event.target.closest("[data-difficulty]");
-      if (!card) return;
-      const select = $("difficulty-select");
-      if (select) {
-        select.value = card.dataset.difficulty;
-        select.dispatchEvent(new Event("change"));
-      }
-    });
   }
 
   ensureDaily();
