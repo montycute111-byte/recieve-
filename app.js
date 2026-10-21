@@ -61,6 +61,7 @@
   const $ = (id) => document.getElementById(id);
   const exercisePools = new Map();
   const settings = loadSettings();
+  window.morseSettings = settings;
   const playback = {
     active: false, paused: false, countdown: false, currentIndex: 0,
     runId: 0, audio: null, oscillator: null, toastTimer: null
