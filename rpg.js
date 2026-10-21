@@ -386,7 +386,7 @@
     if (!activeExercise.rewinds) xp += 25;
     if (!activeExercise.pauses) xp += 15;
     if (state.perfectStreak % 5 === 0) xp += state.perfectStreak % 10 === 0 ? 200 : 100;
-    if (effectiveWpm() >= 10) state.perfectAt10 += 1;
+    if (Number(window.morseSettings?.effectiveWpm || 0) >= 10) state.perfectAt10 += 1;
     state.daily.progress.characters += expected.replace(/\s/g, "").length;
     updateDailyQuests();
     checkAchievements();
