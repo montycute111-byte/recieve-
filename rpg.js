@@ -87,7 +87,7 @@
   function loadState() {
     const fresh = defaultState();
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      const saved = JSON.parse(window.localStorage?.getItem(STORAGE_KEY) || "null");
       if (!saved || typeof saved !== "object") return fresh;
       return {
         ...fresh,
@@ -101,7 +101,11 @@
   }
 
   function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (_) {
+      // Progress still updates for the current session if storage is blocked.
+    }
   }
 
   function todayKey(date = new Date()) {
@@ -333,6 +337,10 @@
       return;
     }
     if (activeExercise.revealed || activeExercise.rewarded) return;
+    // The score event carries the authoritative mode. This keeps rewards working
+    // even if the initial exercise-start event was missed during script loading.
+    const exerciseMode = String(detail.mode || activeExercise.mode || "letters");
+    activeExercise.mode = exerciseMode;
     ensureDaily();
     const expected = String(detail.expected || "");
     const actual = String(detail.actual || "");
@@ -342,7 +350,7 @@
     state.totalAccuracyCharacters += maxLength;
     if (accuracy !== 100 || expected !== actual) {
       state.perfectStreak = 0;
-      if (isSentenceMode(activeExercise.mode)) state.sentencePerfectStreak = 0;
+      if (isSentenceMode(exerciseMode)) state.sentencePerfectStreak = 0;
       saveState();
       renderAll();
       return;
@@ -356,16 +364,16 @@
     let xp = 0;
     let label = "PERFECT COPY!";
 
-    if (isWordMode(activeExercise.mode)) {
+    if (isWordMode(exerciseMode)) {
       state.totalWords += 1;
       xp += 10;
       state.daily.progress.words += 1;
-      if (activeExercise.mode === "halloween") {
+      if (exerciseMode === "halloween") {
         state.halloweenWords += 1;
         state.daily.progress.halloweenWords += 1;
       }
     }
-    if (isSentenceMode(activeExercise.mode)) {
+    if (isSentenceMode(exerciseMode)) {
       state.totalSentences += 1;
       state.daily.progress.sentences += 1;
       state.perfectSentences += 1;
@@ -377,7 +385,7 @@
         state.daily.progress.noRewindSentences += 1;
         state.daily.progress.perfectSentences += 1;
       }
-      if (activeExercise.mode === "halloween-sentences") {
+      if (exerciseMode === "halloween-sentences") {
         state.daily.progress.halloweenSentences += 1;
         if (!activeExercise.rewinds) state.daily.progress.halloweenPerfectSentences += 1;
       }
