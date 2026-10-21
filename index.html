@@ -1,63 +1,101 @@
-〰
-MorseReceive
-Listen. Copy. Improve.
-◉
-Practice
-✦
-Progress
-⌘
-Morse Code Alphabet
-⚙
-Settings
-Train your ear one clean character at a time.
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101820">
+  <meta name="description" content="MorseReceive — listen, copy, and improve your Morse code reception.">
+  <title>MorseReceive</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="feedback.css?v=2">
+  <link rel="stylesheet" href="rpg.css/rpg.css?v=6">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">〰</div>
+        <div><strong>MorseReceive</strong><span>Listen. Copy. Improve.</span></div>
+      </div>
+      <nav class="side-nav" aria-label="Primary navigation">
+        <button class="nav-item active" data-view="practice"><span>◉</span>Practice</button>
+        <button class="nav-item" data-view="progress"><span>✦</span>Progress</button>
+        <button class="nav-item" data-view="alphabet"><span>⌘</span>Morse Code Alphabet</button>
+        <button class="nav-item" data-view="settings"><span>⚙</span>Settings</button>
+      </nav>
+      <div class="sidebar-note">Train your ear one clean character at a time.</div>
+    </aside>
 
-MORSE CODE TRAINER
+    <main class="main-content">
+      <section class="view active" id="practice-view" aria-labelledby="practice-title">
+        <header class="page-header">
+          <div><p class="eyebrow">MORSE CODE TRAINER</p><h1 id="practice-title">Practice</h1><p>Train your ear one clean character at a time.</p></div>
+          <div class="profile-pill"><span class="status-dot"></span><span id="profile-label">Operator</span></div>
+        </header>
 
-Practice
+        <div class="settings-strip panel">
+          <label>Mode<select id="mode-select"><option value="letters">Random Letters</option><option value="numbers">Numbers</option><option value="mixed">Letters + Numbers</option><option value="words">Common Words</option><option value="halloween">Halloween Words</option><option value="sentences">Sentences</option><option value="halloween-sentences">Halloween Sentences</option></select></label>
+          <label>Group<select id="group-select"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>10</option></select></label>
+          <label>Session<select id="session-select"><option value="0">Unlimited</option><option value="1">1 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="10">10 min</option></select></label>
+          <div class="settings-summary"><strong id="summary">5 char · 5 eff · 699 Hz</strong><span>Ready to receive</span></div>
+        </div>
 
-Train your ear one clean character at a time.
+        <section class="panel listening-card">
+          <div class="card-heading"><div><p class="eyebrow">LISTENING WINDOW</p><p class="muted">No symbols are shown during transmission</p></div><strong class="progress-label" id="progress-label">Letter 1 of 5 letters</strong></div>
+          <div class="listening-window" id="listening-window"><div class="bars" id="bars" aria-hidden="true"></div><strong id="status-label">Letter 1</strong><span id="countdown-label"></span></div>
+          <div class="controls">
+            <button class="primary" id="start-button">▶ <span>Start Transmission</span></button>
+            <button id="replay-button">↻ <span>Replay</span></button>
+            <button id="rewind-button" aria-label="Rewind to the previous letter" title="Rewind to the previous letter">◀</button>
+            <button id="pause-button" disabled>Ⅱ <span>Pause</span></button>
+            <button id="stop-button" disabled>■ <span>Stop</span></button>
+          </div>
+          <p class="shortcut-hint">Spacebar rewinds one letter during playback</p>
+        </section>
 
-Operator
-Mode
-Random Letters
-Numbers
-Letters + Numbers
-Common Words
-Halloween Words
-Sentences
-Halloween Sentences
-Group
-1
-3
-5
-7
-10
-Session
-Unlimited
-1 min
-3 min
-5 min
-10 min
-5 char · 5 eff · 699 Hz
-Ready to receive
+        <section class="panel answer-card">
+          <div class="card-heading"><div><h2>Your copy</h2><p class="muted">Click here to type while you listen.</p></div><strong id="score-label"></strong></div>
+          <textarea id="answer-input" rows="4" placeholder="Click to enter your copy…" spellcheck="false" readonly></textarea>
+          <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><button class="primary continue-button" id="continue-button" hidden>Next →</button><span class="answer-message" id="answer-message"></span></div>
+          <div class="result" id="result" hidden></div>
+        </section>
 
-LISTENING WINDOW
+      </section>
 
-No symbols are shown during transmission
+      <section class="view" id="progress-view" aria-labelledby="progress-title">
+        <header class="page-header"><div><p class="eyebrow">OPERATOR PROGRESSION</p><h1 id="progress-title">Progress</h1><p>Track your signal, challenges, mastery, and achievements.</p></div><div class="profile-pill"><span class="status-dot"></span><span id="progress-rank-label">Signal Novice</span></div></header>
 
-Letter 1 of 5 letters
-Letter 1
-▶ Start Transmission
-↻ Replay
-◀
-Ⅱ Pause
-■ Stop
+        <section class="panel rpg-dashboard" aria-labelledby="progression-title">
+          <div class="rpg-dashboard-heading"><div><p class="eyebrow">SIGNAL PATH</p><h2 id="progression-title">Level up your reception</h2><p class="muted">Every clean copy moves you closer to the next rank.</p></div><div class="rank-chip"><span id="rpg-rank-icon">◈</span><span id="rpg-rank">Signal Novice</span></div></div>
+          <div class="rpg-level-row"><div class="level-orb"><span>LEVEL</span><strong id="rpg-level">1</strong></div><div class="xp-panel"><div class="xp-label-row"><strong id="rpg-xp-label">0 / 100 XP</strong><span id="rpg-next-level">100 XP to next level</span></div><div class="xp-track"><div id="rpg-xp-fill"></div></div><p id="rpg-xp-message" class="muted">Start a transmission to earn XP.</p></div></div>
+        </section>
 
-Spacebar rewinds one letter during playback
+        <div class="rpg-two-column">
+          <section class="panel rpg-section daily-quest-panel" aria-labelledby="daily-title"><div class="section-heading"><div><p class="eyebrow">DAILY OBJECTIVES</p><h2 id="daily-title">Daily Quests</h2></div><span id="daily-date" class="muted"></span></div><div class="daily-quest-summary"><strong id="daily-quest-count">0/5 quests complete</strong><span id="daily-reset-countdown">Resets in --:--:--</span><span id="daily-streak-status">Complete 3 quests to qualify for today’s streak.</span></div><div class="quest-group"><div class="quest-group-label">Standard quests</div><div id="daily-quests-standard" class="challenge-list"></div></div><div class="quest-group"><div class="quest-group-label">Bonus quests</div><div id="daily-quests-bonus" class="challenge-list"></div></div></section>
+          <section class="panel rpg-section" aria-labelledby="stats-title"><div class="section-heading"><div><p class="eyebrow">FIELD REPORT</p><h2 id="stats-title">Training Statistics</h2></div></div><div id="rpg-stat-grid" class="rpg-stat-grid"></div></section>
+        </div>
 
-Your copy
+        <section class="panel rpg-section" aria-labelledby="achievements-title"><div class="section-heading"><div><p class="eyebrow">TROPHIES</p><h2 id="achievements-title">Achievements</h2></div><span id="achievement-count" class="muted"></span></div><div id="achievement-grid" class="achievement-grid"></div></section>
+      </section>
 
-Click here to type while you listen.
+      <section class="view" id="alphabet-view" aria-labelledby="alphabet-title">
+        <header class="page-header"><div><p class="eyebrow">REFERENCE</p><h1 id="alphabet-title">Morse Code Alphabet</h1><p>International Morse Code, always available offline.</p></div></header>
+        <div class="alphabet-grid panel" id="alphabet-grid"></div>
+      </section>
 
-✓ Submit Answer
-◉ Reveal Answer
+      <section class="view" id="settings-view" aria-labelledby="settings-title">
+        <header class="page-header"><div><p class="eyebrow">PREFERENCES</p><h1 id="settings-title">Settings</h1><p>Shape the timing and feel of your practice sessions.</p></div></header>
+        <div class="panel settings-form">
+          <div class="setting-section"><h2>CW timing</h2><label>Character speed <output id="character-wpm-value">5 WPM</output><input id="character-wpm" type="range" min="1" max="40" value="5"></label><label>Effective speed <output id="effective-wpm-value">5 WPM</output><input id="effective-wpm" type="range" min="1" max="40" value="5"></label><label>Tone frequency <output id="frequency-value">699 Hz</output><input id="frequency" type="range" min="300" max="1000" value="699"></label><label>Volume <output id="volume-value">62%</output><input id="volume" type="range" min="0" max="100" value="62"></label><button id="reset-settings">Reset to Standard Timing</button></div>
+          <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
+          <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Your settings and progress stay in this browser on this device.</p></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js?v=28"></script>
+  <script src="rpg.js?v=12"></script>
+</body>
+</html>
