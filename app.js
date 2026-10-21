@@ -199,7 +199,6 @@
     $("silence-before").value = settings.silenceBefore;
     $("silence-after").value = settings.silenceAfter;
     $("countdown-setting").checked = settings.countdown;
-    $("auto-advance").checked = settings.autoAdvance;
     $("repeat-correct").checked = settings.repeatCorrect;
     $("character-wpm-value").textContent = `${settings.characterWpm} WPM`;
     $("effective-wpm-value").textContent = `${settings.effectiveWpm} WPM`;
