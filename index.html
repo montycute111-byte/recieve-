@@ -8,6 +8,7 @@
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
+  <link rel="stylesheet" href="rpg.css?v=5">
 </head>
 <body>
   <div class="app-shell">
@@ -18,6 +19,7 @@
       </div>
       <nav class="side-nav" aria-label="Primary navigation">
         <button class="nav-item active" data-view="practice"><span>◉</span>Practice</button>
+        <button class="nav-item" data-view="progress"><span>✦</span>Progress</button>
         <button class="nav-item" data-view="alphabet"><span>⌘</span>Morse Code Alphabet</button>
         <button class="nav-item" data-view="settings"><span>⚙</span>Settings</button>
       </nav>
@@ -35,19 +37,19 @@
           <label>Mode<select id="mode-select"><option value="letters">Random Letters</option><option value="numbers">Numbers</option><option value="mixed">Letters + Numbers</option><option value="words">Common Words</option><option value="halloween">Halloween Words</option><option value="sentences">Sentences</option><option value="halloween-sentences">Halloween Sentences</option></select></label>
           <label>Group<select id="group-select"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>10</option></select></label>
           <label>Session<select id="session-select"><option value="0">Unlimited</option><option value="1">1 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="10">10 min</option></select></label>
+          <label>Difficulty<select id="difficulty-select"><option value="custom">Custom</option><option value="normal">Normal · 5 WPM</option><option value="hard">Hard · 6 WPM</option><option value="expert">Expert · 7 WPM</option><option value="nightmare">Nightmare · 8 WPM</option><option value="torment-1">Torment I · 10 WPM</option><option value="torment-2">Torment II · 13 WPM</option><option value="torment-3">Torment III · 15 WPM</option><option value="torment-4">Torment IV · 20 WPM</option></select></label>
           <div class="settings-summary"><strong id="summary">5 char · 5 eff · 699 Hz</strong><span>Ready to receive</span></div>
         </div>
 
         <section class="panel listening-card">
-          <div class="card-heading"><div><p class="eyebrow">LISTENING WINDOW</p><p class="muted">No symbols are shown during transmission</p></div><strong class="progress-label" id="progress-label">Letter 1 of 5</strong></div>
+          <div class="card-heading"><div><p class="eyebrow">LISTENING WINDOW</p><p class="muted">No symbols are shown during transmission</p></div><strong class="progress-label" id="progress-label">Letter 1 of 5 letters</strong></div>
           <div class="listening-window" id="listening-window"><div class="bars" id="bars" aria-hidden="true"></div><strong id="status-label">Letter 1</strong><span id="countdown-label"></span></div>
           <div class="controls">
             <button class="primary" id="start-button">▶ <span>Start Transmission</span></button>
             <button id="replay-button">↻ <span>Replay</span></button>
-            <button id="rewind-button">◀ <span>Rewind 1 Letter</span></button>
+            <button id="rewind-button" aria-label="Rewind to the previous letter" title="Rewind to the previous letter">◀</button>
             <button id="pause-button" disabled>Ⅱ <span>Pause</span></button>
             <button id="stop-button" disabled>■ <span>Stop</span></button>
-            <button id="skip-button">▶▶ <span>Skip</span></button>
           </div>
           <p class="shortcut-hint">Spacebar rewinds one letter during playback</p>
         </section>
@@ -55,10 +57,28 @@
         <section class="panel answer-card">
           <div class="card-heading"><div><h2>Your copy</h2><p class="muted">Click here to type while you listen.</p></div><strong id="score-label"></strong></div>
           <textarea id="answer-input" rows="4" placeholder="Click to enter your copy…" spellcheck="false" readonly></textarea>
-          <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><button class="primary continue-button" id="continue-button" hidden>Continue →</button><span class="answer-message" id="answer-message"></span></div>
+          <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><button class="primary continue-button" id="continue-button" hidden>Next →</button><span class="answer-message" id="answer-message"></span></div>
           <div class="result" id="result" hidden></div>
         </section>
 
+      </section>
+
+      <section class="view" id="progress-view" aria-labelledby="progress-title">
+        <header class="page-header"><div><p class="eyebrow">OPERATOR PROGRESSION</p><h1 id="progress-title">Progress</h1><p>Track your signal, challenges, mastery, and achievements.</p></div><div class="profile-pill"><span class="status-dot"></span><span id="progress-rank-label">Signal Novice</span></div></header>
+
+        <section class="panel rpg-dashboard" aria-labelledby="progression-title">
+          <div class="rpg-dashboard-heading"><div><p class="eyebrow">SIGNAL PATH</p><h2 id="progression-title">Level up your reception</h2><p class="muted">Every clean copy moves you closer to the next rank.</p></div><div class="rank-chip"><span id="rpg-rank-icon">◈</span><span id="rpg-rank">Signal Novice</span></div></div>
+          <div class="rpg-level-row"><div class="level-orb"><span>LEVEL</span><strong id="rpg-level">1</strong></div><div class="xp-panel"><div class="xp-label-row"><strong id="rpg-xp-label">0 / 100 XP</strong><span id="rpg-next-level">100 XP to next level</span></div><div class="xp-track"><div id="rpg-xp-fill"></div></div><p id="rpg-xp-message" class="muted">Start a transmission to earn XP.</p></div></div>
+        </section>
+
+        <div class="rpg-two-column">
+          <section class="panel rpg-section daily-quest-panel" aria-labelledby="daily-title"><div class="section-heading"><div><p class="eyebrow">DAILY OBJECTIVES</p><h2 id="daily-title">Daily Quests</h2></div><span id="daily-date" class="muted"></span></div><div class="daily-quest-summary"><strong id="daily-quest-count">0/5 quests complete</strong><span id="daily-reset-countdown">Resets in --:--:--</span><span id="daily-streak-status">Complete 3 quests to qualify for today’s streak.</span></div><div class="quest-group"><div class="quest-group-label">Standard quests</div><div id="daily-quests-standard" class="challenge-list"></div></div><div class="quest-group"><div class="quest-group-label">Bonus quests</div><div id="daily-quests-bonus" class="challenge-list"></div></div></section>
+          <section class="panel rpg-section" aria-labelledby="stats-title"><div class="section-heading"><div><p class="eyebrow">FIELD REPORT</p><h2 id="stats-title">Training Statistics</h2></div></div><div id="rpg-stat-grid" class="rpg-stat-grid"></div></section>
+        </div>
+
+        <section class="panel rpg-section" aria-labelledby="difficulty-title"><div class="section-heading"><div><p class="eyebrow">ASCENSION</p><h2 id="difficulty-title">Difficulty Mastery</h2><p class="muted">Select a tier in Practice, then set your WPM independently in Settings. Master each tier with three qualifying sessions at 98%+ accuracy.</p></div></div><div id="difficulty-grid" class="difficulty-grid"></div></section>
+
+        <section class="panel rpg-section" aria-labelledby="achievements-title"><div class="section-heading"><div><p class="eyebrow">TROPHIES</p><h2 id="achievements-title">Achievements</h2></div><span id="achievement-count" class="muted"></span></div><div id="achievement-grid" class="achievement-grid"></div></section>
       </section>
 
       <section class="view" id="alphabet-view" aria-labelledby="alphabet-title">
@@ -76,7 +96,9 @@
       </section>
     </main>
   </div>
+  <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=18"></script>
+    <script src="app.js?v=27"></script>
+  <script src="rpg.js?v=11"></script>
 </body>
 </html>
