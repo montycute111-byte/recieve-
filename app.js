@@ -303,7 +303,7 @@
     playback.toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   }
 
-  function playPerfectCopySound(){if(!playback.successAudio){playback.successAudio=new Audio("assets/perfect-copy.mp3");playback.successAudio.volume=.9;}playback.successAudio.currentTime=0;const playPromise=playback.successAudio.play();if(playPromise?.catch)playPromise.catch(()=>{});} function setStatus(message) {
+  function playPerfectCopySound(){if(!playback.successAudio){playback.successAudio=new Audio("mrstokes302-success-videogame-sfx-mrstokes302-423626.mp3");playback.successAudio.volume=.9;}playback.successAudio.currentTime=0;const playPromise=playback.successAudio.play();if(playPromise?.catch)playPromise.catch(()=>{});} function setStatus(message) {
     $("status-label").textContent = message;
   }
 
