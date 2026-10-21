@@ -55,7 +55,7 @@
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
     silenceBefore: 0.7, silenceAfter: 0.7, countdown: true,
-    autoAdvance: true, repeatCorrect: false, profileName: "Operator"
+    repeatCorrect: false, profileName: "Operator"
   };
 
   const $ = (id) => document.getElementById(id);
@@ -165,6 +165,8 @@
     $("score-label").textContent = "";
     $("answer-message").textContent = "";
     $("result").hidden = true;
+    $("result").classList.remove("perfect-result");
+    $("continue-button").hidden = true;
     updateSummary();
   }
 
@@ -444,17 +446,34 @@
     lastAnswerCorrect = expected === actual;
     $("score-label").textContent = `${accuracy}% accurate`;
     $("answer-message").textContent = lastAnswerCorrect ? "Perfect copy." : "Review the revealed copy below.";
+    $("submit-button").disabled = true;
+    $("continue-button").hidden = false;
+    $("result").classList.toggle("perfect-result", lastAnswerCorrect);
     $("result").hidden = false;
-    $("result").innerHTML = `<strong>Expected: ${escapeHtml(expected)}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
-    if (settings.autoAdvance && (!settings.repeatCorrect || lastAnswerCorrect)) {
-      setTimeout(() => { if (!playback.active) { generateExercise(); startTransmission(); } }, 1300);
-    }
+    const reward = lastAnswerCorrect ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
+    $("result").innerHTML = `${reward}<strong>Expected: ${escapeHtml(expected)}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
+    if (lastAnswerCorrect) showToast("Perfect copy! Great work.");
   }
 
   function revealAnswer() {
     $("answer-input").value = exercise;
     $("submit-button").disabled = false;
     scoreAnswer();
+  }
+
+  function continueToNext() {
+    stopTransmission();
+    if (settings.repeatCorrect && !lastAnswerCorrect) {
+      $("answer-input").value = "";
+      $("score-label").textContent = "";
+      $("answer-message").textContent = "Try the same transmission again.";
+      $("result").hidden = true;
+      $("continue-button").hidden = true;
+      startTransmission();
+      return;
+    }
+    generateExercise();
+    startTransmission();
   }
 
   function escapeHtml(value) {
@@ -486,6 +505,7 @@
     $("answer-input").addEventListener("input", () => { $("submit-button").disabled = !$("answer-input").value.trim(); });
     $("submit-button").addEventListener("click", scoreAnswer);
     $("reveal-button").addEventListener("click", revealAnswer);
+    $("continue-button").addEventListener("click", continueToNext);
 
     const rangeSettings = [
       ["character-wpm", "characterWpm"], ["effective-wpm", "effectiveWpm"], ["frequency", "frequency"],
@@ -497,7 +517,6 @@
       updateSettingDisplays();
     }));
     $("countdown-setting").addEventListener("change", (event) => { settings.countdown = event.target.checked; saveSettings(); });
-    $("auto-advance").addEventListener("change", (event) => { settings.autoAdvance = event.target.checked; saveSettings(); });
     $("repeat-correct").addEventListener("change", (event) => { settings.repeatCorrect = event.target.checked; saveSettings(); });
     $("profile-name").addEventListener("input", (event) => { settings.profileName = event.target.value; saveSettings(); updateProfile(); });
     $("reset-settings").addEventListener("click", () => { Object.assign(settings, STANDARD); saveSettings(); updateSettingDisplays(); updateProfile(); showToast("Standard timing restored"); });

@@ -7,6 +7,7 @@
   <meta name="description" content="MorseReceive — listen, copy, and improve your Morse code reception.">
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="feedback.css">
 </head>
 <body>
   <div class="app-shell">
@@ -54,7 +55,7 @@
         <section class="panel answer-card">
           <div class="card-heading"><div><h2>Your copy</h2><p class="muted">Click here to type while you listen.</p></div><strong id="score-label"></strong></div>
           <textarea id="answer-input" rows="4" placeholder="Click to enter your copy…" spellcheck="false" readonly></textarea>
-          <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><span class="answer-message" id="answer-message"></span></div>
+          <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><button class="primary continue-button" id="continue-button" hidden>Continue →</button><span class="answer-message" id="answer-message"></span></div>
           <div class="result" id="result" hidden></div>
         </section>
 
@@ -69,13 +70,13 @@
         <header class="page-header"><div><p class="eyebrow">PREFERENCES</p><h1 id="settings-title">Settings</h1><p>Shape the timing and feel of your practice sessions.</p></div></header>
         <div class="panel settings-form">
           <div class="setting-section"><h2>CW timing</h2><label>Character speed <output id="character-wpm-value">5 WPM</output><input id="character-wpm" type="range" min="1" max="40" value="5"></label><label>Effective speed <output id="effective-wpm-value">5 WPM</output><input id="effective-wpm" type="range" min="1" max="40" value="5"></label><label>Tone frequency <output id="frequency-value">699 Hz</output><input id="frequency" type="range" min="300" max="1000" value="699"></label><label>Volume <output id="volume-value">62%</output><input id="volume" type="range" min="0" max="100" value="62"></label><button id="reset-settings">Reset to Standard Timing</button></div>
-          <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Automatically advance after submitting</span><input id="auto-advance" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
+          <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
           <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Your settings and progress stay in this browser on this device.</p></div>
         </div>
       </section>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=16"></script>
+    <script src="app.js?v=17"></script>
 </body>
 </html>
