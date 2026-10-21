@@ -55,7 +55,7 @@
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
     silenceBefore: 0.7, silenceAfter: 0.7, countdown: true,
-    repeatCorrect: false, profileName: "Operator"
+    repeatCorrect: false, profileName: "Operator", difficulty: "custom"
   };
 
   const $ = (id) => document.getElementById(id);
@@ -67,6 +67,7 @@
   };
   let exercise = "";
   let lastAnswerCorrect = false;
+  let awaitingNext = false;
 
   function loadSettings() {
     try {
@@ -128,14 +129,27 @@
     return ["sentences", "halloween-sentences"].includes($("mode-select").value);
   }
 
+  function isWordMode() {
+    return ["words", "halloween"].includes($("mode-select").value);
+  }
+
+  function wordCount(text) {
+    const trimmed = text.trim();
+    return trimmed ? trimmed.split(/\s+/).length : 1;
+  }
+
   function positionLabel(index) {
     const safeIndex = Math.min(Math.max(0, index), Math.max(0, exercise.length - 1));
-    if (!isSentenceMode()) return `Letter ${letterNumber(safeIndex)}`;
+    if (!isSentenceMode() && !isWordMode()) return `Letter ${letterNumber(safeIndex)} of ${letterCount(exercise)} letters`;
     const throughCurrent = exercise.slice(0, safeIndex + 1);
     const wordNumber = throughCurrent.trim().split(/\s+/).length;
     const wordStart = Math.max(0, throughCurrent.lastIndexOf(" ") + 1);
     const letterInWord = [...exercise.slice(wordStart, safeIndex + 1)].filter((char) => char !== " ").length;
-    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)}`;
+    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)} of ${letterCount(exercise)} letters`;
+  }
+
+  function compactPositionLabel(index) {
+    return positionLabel(index).replace(/ of \d+ letters$/, "");
   }
 
   function generateExercise() {
@@ -158,8 +172,9 @@
       exercise = randomSequence(LETTERS, group, `${mode}:${group}`);
     }
     playback.currentIndex = 0;
+    awaitingNext = false;
     updateProgress(0);
-    setStatus(positionLabel(0));
+    setStatus(compactPositionLabel(0));
     $("answer-input").value = "";
     $("submit-button").disabled = true;
     $("score-label").textContent = "";
@@ -168,6 +183,8 @@
     $("result").classList.remove("perfect-result");
     $("continue-button").hidden = true;
     updateSummary();
+    window.morseCurrentExercise = exercise;
+    notifyRpg("exercise-start", { mode, text: exercise });
   }
 
   function updateSummary() {
@@ -177,13 +194,7 @@
   }
 
   function updateProgress(index) {
-    const total = letterCount(exercise);
-    if (isSentenceMode()) {
-      $("progress-label").textContent = `${positionLabel(index)} of ${total} letters`;
-      return;
-    }
-    const current = Math.min(total, letterNumber(Math.min(index, exercise.length)));
-    $("progress-label").textContent = `Letter ${Math.max(1, current)} of ${total}`;
+    $("progress-label").textContent = positionLabel(index);
   }
 
   function updateProfile() {
@@ -200,6 +211,7 @@
     $("silence-after").value = settings.silenceAfter;
     $("countdown-setting").checked = settings.countdown;
     $("repeat-correct").checked = settings.repeatCorrect;
+    $("difficulty-select").value = settings.difficulty || "custom";
     $("character-wpm-value").textContent = `${settings.characterWpm} WPM`;
     $("effective-wpm-value").textContent = `${settings.effectiveWpm} WPM`;
     $("frequency-value").textContent = `${settings.frequency} Hz`;
@@ -219,6 +231,10 @@
 
   function setStatus(message) {
     $("status-label").textContent = message;
+  }
+
+  function notifyRpg(eventName, detail = {}) {
+    window.dispatchEvent(new CustomEvent(`morse:${eventName}`, { detail }));
   }
 
   function disarmAnswerInput() {
@@ -300,7 +316,7 @@
     for (const second of seconds) {
       if (runId !== playback.runId) return false;
       $("countdown-label").textContent = String(second);
-      setStatus(positionLabel(playback.currentIndex));
+      setStatus(compactPositionLabel(playback.currentIndex));
       await sleep(700);
     }
     $("countdown-label").textContent = "";
@@ -317,13 +333,15 @@
     playback.currentIndex = Math.max(0, Math.min(startIndex, Math.max(0, exercise.length - 1)));
     $("listening-window").classList.add("is-playing");
     $("start-button").disabled = true;
+    $("start-button").hidden = true;
     $("replay-button").disabled = true;
     $("rewind-button").disabled = false;
     $("pause-button").disabled = false;
     $("stop-button").disabled = false;
     $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     updateProgress(playback.currentIndex);
-    setStatus(positionLabel(playback.currentIndex));
+    setStatus(compactPositionLabel(playback.currentIndex));
+    notifyRpg("playback-start", { mode: $("mode-select").value });
     try {
       await ensureAudio();
       if (settings.silenceBefore > 0) await sleep(Number(settings.silenceBefore) * 1000);
@@ -336,7 +354,7 @@
         if (exercise[index] === " ") continue;
         playback.currentIndex = index;
         updateProgress(index);
-        setStatus(positionLabel(index));
+        setStatus(compactPositionLabel(index));
         if (!(await playCharacter(exercise[index], runId))) return;
         if (index < exercise.length - 1) {
           await sleep(exercise[index + 1] === " " ? wordGap : letterGap);
@@ -344,23 +362,27 @@
       }
       if (settings.silenceAfter > 0 && runId === playback.runId) await sleep(Number(settings.silenceAfter) * 1000);
       if (runId !== playback.runId) return;
+      notifyRpg("playback-stop", { mode: $("mode-select").value, completed: true });
       playback.active = false;
       playback.currentIndex = exercise.length;
       disarmAnswerInput();
       updateProgress(exercise.length);
-      setStatus(positionLabel(Math.max(0, exercise.length - 1)));
+      setStatus(compactPositionLabel(Math.max(0, exercise.length - 1)));
       $("listening-window").classList.remove("is-playing");
       $("start-button").disabled = false;
+      $("start-button").hidden = false;
       $("replay-button").disabled = false;
       $("pause-button").disabled = true;
       $("stop-button").disabled = true;
     } catch (error) {
       if (runId !== playback.runId) return;
+      notifyRpg("playback-stop", { mode: $("mode-select").value, completed: false });
       playback.active = false;
       disarmAnswerInput();
       $("listening-window").classList.remove("is-playing");
-      setStatus(positionLabel(Math.max(0, playback.currentIndex)));
+      setStatus(compactPositionLabel(Math.max(0, playback.currentIndex)));
       $("start-button").disabled = false;
+      $("start-button").hidden = false;
       $("replay-button").disabled = false;
       $("pause-button").disabled = true;
       $("stop-button").disabled = true;
@@ -374,7 +396,7 @@
       playback.paused = false;
       if (playback.audio?.state === "suspended") await playback.audio.resume();
       $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
-      setStatus(positionLabel(playback.currentIndex));
+      setStatus(compactPositionLabel(playback.currentIndex));
       return;
     }
     if (playback.active) return;
@@ -383,10 +405,26 @@
     playback.active = true;
     playback.countdown = settings.countdown;
     $("start-button").disabled = true;
+    $("start-button").hidden = true;
     $("replay-button").disabled = true;
     $("rewind-button").disabled = false;
     $("pause-button").disabled = false;
     $("stop-button").disabled = false;
+    try {
+      // Initialize/resume Web Audio during the user's tap before the countdown.
+      // Mobile browsers may reject audio if the context is first resumed later.
+      await ensureAudio();
+    } catch (error) {
+      playback.active = false;
+      playback.countdown = false;
+      $("start-button").disabled = false;
+      $("start-button").hidden = false;
+      $("replay-button").disabled = false;
+      $("pause-button").disabled = true;
+      $("stop-button").disabled = true;
+      showToast(error.message);
+      return;
+    }
     if (settings.countdown && !(await countdown(runId))) return;
     if (runId !== playback.runId) return;
     playback.active = false;
@@ -399,17 +437,19 @@
     const current = playback.currentIndex >= exercise.length ? exercise.length : playback.currentIndex;
     let target = current >= exercise.length ? lastIndex : Math.max(0, current - 1);
     while (target > 0 && exercise[target] === " ") target -= 1;
+    notifyRpg("rewind", { mode: $("mode-select").value });
     playback.runId += 1;
     stopCurrentTone();
     playback.active = false;
     playback.paused = false;
     disarmAnswerInput();
     $("countdown-label").textContent = "";
-    setStatus(positionLabel(target));
+    setStatus(compactPositionLabel(target));
     playFrom(target);
   }
 
   function stopTransmission() {
+    notifyRpg("playback-stop", { mode: $("mode-select").value, completed: false });
     playback.runId += 1;
     stopCurrentTone();
     playback.active = false;
@@ -419,21 +459,23 @@
     $("countdown-label").textContent = "";
     $("listening-window").classList.remove("is-playing");
     $("start-button").disabled = false;
+    $("start-button").hidden = false;
     $("replay-button").disabled = false;
     $("pause-button").disabled = true;
     $("stop-button").disabled = true;
     $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
-    setStatus(positionLabel(Math.min(playback.currentIndex, Math.max(0, exercise.length - 1))));
+    setStatus(compactPositionLabel(Math.min(playback.currentIndex, Math.max(0, exercise.length - 1))));
   }
 
   function togglePause() {
     if (!playback.active || playback.countdown) return;
     playback.paused = !playback.paused;
+    if (playback.paused) notifyRpg("pause", { mode: $("mode-select").value });
     $("pause-button").innerHTML = playback.paused ? "▶ <span>Resume</span>" : "Ⅱ <span>Pause</span>";
-    setStatus(`${positionLabel(playback.currentIndex)}${playback.paused ? " · Paused" : ""}`);
+    setStatus(`${compactPositionLabel(playback.currentIndex)}${playback.paused ? " · Paused" : ""}`);
   }
 
-  function scoreAnswer() {
+  function scoreAnswer(source = "submit") {
     const expected = exercise.trim().toUpperCase();
     const actual = $("answer-input").value.trim().toUpperCase().replace(/\s+/g, " ");
     const maxLength = Math.max(expected.length, actual.length, 1);
@@ -443,6 +485,7 @@
     }
     const accuracy = Math.round((matches / maxLength) * 100);
     lastAnswerCorrect = expected === actual;
+    awaitingNext = true;
     $("score-label").textContent = `${accuracy}% accurate`;
     $("answer-message").textContent = lastAnswerCorrect ? "Perfect copy." : "Review the revealed copy below.";
     $("submit-button").disabled = true;
@@ -452,15 +495,18 @@
     const reward = lastAnswerCorrect ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
     $("result").innerHTML = `${reward}<strong>Expected: ${escapeHtml(expected)}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
     if (lastAnswerCorrect) showToast("Perfect copy! Great work.");
+    notifyRpg("score", { source, mode: $("mode-select").value, accuracy, matches, maxLength, expected, actual });
   }
 
   function revealAnswer() {
     $("answer-input").value = exercise;
     $("submit-button").disabled = false;
-    scoreAnswer();
+    scoreAnswer("reveal");
   }
 
   function continueToNext() {
+    if (!awaitingNext) return;
+    awaitingNext = false;
     stopTransmission();
     if (settings.repeatCorrect && !lastAnswerCorrect) {
       $("answer-input").value = "";
@@ -498,11 +544,20 @@
     $("rewind-button").addEventListener("click", rewindOneLetter);
     $("pause-button").addEventListener("click", togglePause);
     $("stop-button").addEventListener("click", stopTransmission);
-    $("skip-button").addEventListener("click", () => { stopTransmission(); generateExercise(); startTransmission(); });
     $("answer-input").addEventListener("pointerdown", armAnswerInput);
     $("answer-input").addEventListener("click", armAnswerInput);
-    $("answer-input").addEventListener("input", () => { $("submit-button").disabled = !$("answer-input").value.trim(); });
-    $("submit-button").addEventListener("click", scoreAnswer);
+    $("answer-input").addEventListener("input", (event) => {
+      const input = event.currentTarget;
+      const selectionStart = input.selectionStart;
+      const selectionEnd = input.selectionEnd;
+      const uppercaseValue = input.value.toUpperCase();
+      if (input.value !== uppercaseValue) {
+        input.value = uppercaseValue;
+        input.setSelectionRange(selectionStart, selectionEnd);
+      }
+      $("submit-button").disabled = !input.value.trim();
+    });
+    $("submit-button").addEventListener("click", () => scoreAnswer("submit"));
     $("reveal-button").addEventListener("click", revealAnswer);
     $("continue-button").addEventListener("click", continueToNext);
 
@@ -517,6 +572,12 @@
     }));
     $("countdown-setting").addEventListener("change", (event) => { settings.countdown = event.target.checked; saveSettings(); });
     $("repeat-correct").addEventListener("change", (event) => { settings.repeatCorrect = event.target.checked; saveSettings(); });
+    $("difficulty-select").addEventListener("change", (event) => {
+      settings.difficulty = event.target.value;
+      saveSettings();
+      updateSummary();
+      notifyRpg("difficulty-change", { difficulty: settings.difficulty });
+    });
     $("profile-name").addEventListener("input", (event) => { settings.profileName = event.target.value; saveSettings(); updateProfile(); });
     $("reset-settings").addEventListener("click", () => { Object.assign(settings, STANDARD); saveSettings(); updateSettingDisplays(); updateProfile(); showToast("Standard timing restored"); });
 
