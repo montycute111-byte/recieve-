@@ -244,6 +244,7 @@
     setListenStatus(compactListenPositionLabel(0));
     $("listen-countdown-label").textContent = "";
     $("listen-next-button").hidden = true;
+    $("listen-next-button").disabled = true;
     $("listen-start-button").hidden = false;
     $("listen-start-button").disabled = false;
     updateListenSummary();
@@ -637,7 +638,8 @@
     $("listen-rewind-button").disabled = false;
     $("listen-pause-button").disabled = false;
     $("listen-stop-button").disabled = false;
-    $("listen-next-button").hidden = true;
+    $("listen-next-button").hidden = false;
+    $("listen-next-button").disabled = true;
     $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     updateListenProgress(listenPlayback.currentIndex);
     setListenStatus(compactListenPositionLabel(listenPlayback.currentIndex));
@@ -672,6 +674,7 @@
       $("listen-pause-button").disabled = true;
       $("listen-stop-button").disabled = true;
       $("listen-next-button").hidden = false;
+      $("listen-next-button").disabled = false;
     } catch (error) {
       if (runId !== listenPlayback.runId) return;
       notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: false });
@@ -683,6 +686,8 @@
       $("listen-replay-button").disabled = false;
       $("listen-pause-button").disabled = true;
       $("listen-stop-button").disabled = true;
+      $("listen-next-button").hidden = true;
+      $("listen-next-button").disabled = true;
       showToast(error.message);
     }
   }
@@ -706,6 +711,8 @@
     $("listen-rewind-button").disabled = false;
     $("listen-pause-button").disabled = false;
     $("listen-stop-button").disabled = false;
+    $("listen-next-button").hidden = false;
+    $("listen-next-button").disabled = true;
     try {
       await ensureListenAudio();
     } catch (error) {
@@ -737,12 +744,13 @@
     listenPlayback.active = false;
     listenPlayback.paused = false;
     listenAwaitingNext = false;
-    $("listen-next-button").hidden = true;
+    $("listen-next-button").hidden = false;
+    $("listen-next-button").disabled = true;
     setListenStatus(compactListenPositionLabel(target));
     playListenFrom(target);
   }
 
-  function stopListenTransmission() {
+  function stopListenTransmission(keepNextButton = false) {
     notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: false });
     listenPlayback.runId += 1;
     stopListenTone();
@@ -757,7 +765,8 @@
     $("listen-replay-button").disabled = false;
     $("listen-pause-button").disabled = true;
     $("listen-stop-button").disabled = true;
-    $("listen-next-button").hidden = true;
+    $("listen-next-button").hidden = !keepNextButton;
+    $("listen-next-button").disabled = true;
     $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     setListenStatus(compactListenPositionLabel(Math.min(listenPlayback.currentIndex, Math.max(0, listenExercise.length - 1))));
   }
@@ -856,7 +865,7 @@
     $("listen-group-select").addEventListener("change", changeListenExercise);
     $("listen-session-select").addEventListener("change", () => showToast($("listen-session-select").value === "0" ? "Unlimited session selected" : `${$("listen-session-select").value}-minute session selected`));
     $("listen-start-button").addEventListener("click", startListenTransmission);
-    $("listen-replay-button").addEventListener("click", () => { stopListenTransmission(); playListenFrom(0); });
+    $("listen-replay-button").addEventListener("click", () => { stopListenTransmission(true); playListenFrom(0); });
     $("listen-rewind-button").addEventListener("click", listenRewindOneLetter);
     $("listen-pause-button").addEventListener("click", toggleListenPause);
     $("listen-stop-button").addEventListener("click", stopListenTransmission);
