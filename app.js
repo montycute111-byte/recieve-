@@ -55,7 +55,7 @@
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
     silenceBefore: 0.7, silenceAfter: 0.7, countdown: true,
-    repeatCorrect: false, profileName: "Operator", difficulty: "custom"
+    repeatCorrect: false, profileName: "Operator"
   };
 
   const $ = (id) => document.getElementById(id);
@@ -211,7 +211,6 @@
     $("silence-after").value = settings.silenceAfter;
     $("countdown-setting").checked = settings.countdown;
     $("repeat-correct").checked = settings.repeatCorrect;
-    $("difficulty-select").value = settings.difficulty || "custom";
     $("character-wpm-value").textContent = `${settings.characterWpm} WPM`;
     $("effective-wpm-value").textContent = `${settings.effectiveWpm} WPM`;
     $("frequency-value").textContent = `${settings.frequency} Hz`;
@@ -572,12 +571,6 @@
     }));
     $("countdown-setting").addEventListener("change", (event) => { settings.countdown = event.target.checked; saveSettings(); });
     $("repeat-correct").addEventListener("change", (event) => { settings.repeatCorrect = event.target.checked; saveSettings(); });
-    $("difficulty-select").addEventListener("change", (event) => {
-      settings.difficulty = event.target.value;
-      saveSettings();
-      updateSummary();
-      notifyRpg("difficulty-change", { difficulty: settings.difficulty });
-    });
     $("profile-name").addEventListener("input", (event) => { settings.profileName = event.target.value; saveSettings(); updateProfile(); });
     $("reset-settings").addEventListener("click", () => { Object.assign(settings, STANDARD); saveSettings(); updateSettingDisplays(); updateProfile(); showToast("Standard timing restored"); });
 
