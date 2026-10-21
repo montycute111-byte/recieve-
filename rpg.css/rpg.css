@@ -162,8 +162,7 @@
 }
 
 .challenge-list,
-.achievement-grid,
-.difficulty-grid {
+.achievement-grid {
   display: grid;
   gap: 0.7rem;
   margin-top: 1rem;
@@ -278,68 +277,6 @@
   margin-top: 0.25rem;
   color: var(--accent-dark);
   font-size: 1rem;
-}
-
-.difficulty-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.difficulty-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 0.65rem;
-  align-items: center;
-  padding: 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 0.8rem;
-  color: var(--ink);
-  text-align: left;
-  background: #fbfcfc;
-  cursor: pointer;
-}
-
-.difficulty-card:hover,
-.difficulty-card.selected {
-  border-color: #9bcfc8;
-  background: #f0faf8;
-}
-
-.difficulty-card.mastered {
-  border-color: #8dcac1;
-}
-
-.difficulty-mark {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  color: #927024;
-  background: #fff6df;
-  font-weight: 800;
-}
-
-.difficulty-card.mastered .difficulty-mark {
-  color: var(--accent-dark);
-  background: #e1f4f0;
-}
-
-.difficulty-card strong,
-.difficulty-card small,
-.difficulty-card em {
-  display: block;
-}
-
-.difficulty-card small,
-.difficulty-card em {
-  margin-top: 0.2rem;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-style: normal;
-}
-
-.difficulty-card em {
-  grid-column: 2;
 }
 
 .rpg-toast {
@@ -467,8 +404,7 @@
 }
 
 @media (max-width: 850px) {
-  .rpg-two-column,
-  .difficulty-grid {
+  .rpg-two-column {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -480,8 +416,7 @@
     flex-direction: column;
   }
 
-  .rpg-two-column,
-  .difficulty-grid {
+  .rpg-two-column {
     grid-template-columns: 1fr;
   }
 
