@@ -14,6 +14,14 @@
     { level: 45, name: "Grandmaster", icon: "♕" },
     { level: 55, name: "Morse Champion", icon: "☼" }
   ];
+  const THEME_META = [
+    { id: "video-games", icon: "🎮", name: "Video Games" },
+    { id: "movies-tv", icon: "🎬", name: "Movies & TV" },
+    { id: "famous-quotes", icon: "💬", name: "Famous Quotes" },
+    { id: "jokes-riddles", icon: "😂", name: "Jokes & Riddles" },
+    { id: "music", icon: "🎵", name: "Music" },
+    { id: "general-sentences", icon: "📝", name: "General Sentences" }
+  ];
   const STANDARD_QUESTS = [
     { id: "warm-up", title: "Warm-Up", description: "Decode 10 words correctly.", target: 10, reward: 25, metric: "words", group: "standard" },
     { id: "sentence-starter", title: "Sentence Starter", description: "Decode 10 sentences correctly.", target: 10, reward: 50, metric: "sentences", group: "standard" },
@@ -66,6 +74,7 @@
     totalQuestsCompleted: 0,
     halloweenQuestsCompleted: 0,
     unlockedAchievements: [],
+    themeProgress: Object.fromEntries(THEME_META.map((theme) => [theme.id, { completed: [] }])),
     daily: {
       date: "",
       questIds: [],
@@ -93,6 +102,11 @@
         ...fresh,
         ...saved,
         unlockedAchievements: Array.isArray(saved.unlockedAchievements) ? saved.unlockedAchievements.filter((id) => !REMOVED_ACHIEVEMENT_IDS.has(id)) : [],
+        themeProgress: Object.fromEntries(THEME_META.map((theme) => [theme.id, {
+          ...fresh.themeProgress[theme.id],
+          ...((saved.themeProgress || {})[theme.id] || {}),
+          completed: Array.isArray((saved.themeProgress || {})[theme.id]?.completed) ? [...new Set((saved.themeProgress || {})[theme.id].completed)] : []
+        }])),
         daily: { ...fresh.daily, ...(saved.daily || {}), questIds: Array.isArray((saved.daily || {}).questIds) ? saved.daily.questIds : [], progress: { ...fresh.daily.progress, ...((saved.daily || {}).progress || {}) }, completed: Array.isArray((saved.daily || {}).completed) ? saved.daily.completed : [] }
       };
     } catch (_) {
@@ -359,6 +373,10 @@
     activeExercise.rewarded = true;
     state.successfulExercises += 1;
     state.totalCharacters += expected.replace(/\s/g, "").length;
+    if (isSentenceMode(exerciseMode) && detail.themeId && state.themeProgress[detail.themeId]) {
+      const completed = state.themeProgress[detail.themeId].completed;
+      if (!completed.includes(expected)) completed.push(expected);
+    }
     state.perfectStreak += 1;
     state.longestPerfectStreak = Math.max(state.longestPerfectStreak, state.perfectStreak);
     let xp = 0;
@@ -431,6 +449,16 @@
     if ($("rpg-stat-grid")) $("rpg-stat-grid").innerHTML = stats.map(([label, value]) => `<div class="rpg-stat-tile"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
   }
 
+  function renderThemeProgress() {
+    const container = $("theme-progress-grid");
+    if (!container) return;
+    container.innerHTML = THEME_META.map((theme) => {
+      const count = Math.min(500, state.themeProgress[theme.id]?.completed.length || 0);
+      const percentage = (count / 500) * 100;
+      return `<article class="theme-progress-card"><div class="theme-progress-icon">${theme.icon}</div><div class="theme-progress-copy"><div class="theme-progress-title"><strong>${escapeHtml(theme.name)}</strong><span>${count} / 500</span></div><div class="challenge-progress"><i style="width:${percentage}%"></i></div><small>${count === 500 ? "Library mastered" : `${500 - count} sentences remaining`}</small></div></article>`;
+    }).join("");
+  }
+
   function resetCountdownText() {
     const now = new Date();
     const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
@@ -480,13 +508,14 @@
   function renderAll() {
     renderProgression();
     renderStats();
+    renderThemeProgress();
     renderDaily();
     renderAchievements();
   }
 
   function bindEvents() {
     window.addEventListener("morse:exercise-start", (event) => {
-      activeExercise = { mode: event.detail.mode || "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false };
+      activeExercise = { mode: event.detail.mode || "letters", themeId: event.detail.themeId || "", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false };
     });
     window.addEventListener("morse:playback-start", () => {
       if (!activeExercise.playStartedAt) activeExercise.playStartedAt = Date.now();

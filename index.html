@@ -1,4 +1,6 @@
-<html lang="en"><head>
+<!doctype html>
+<html lang="en">
+<head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#101820">
@@ -6,8 +8,8 @@
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
-  <link rel="stylesheet" href="rpg.css/rpg.css?v=8">
-<style>.sending-card{padding:22px;display:flex;justify-content:center;align-items:center;overflow:hidden}.sending-design{display:block;width:100%;max-width:100%;height:auto;border-radius:12px}</style></head>
+  <link rel="stylesheet" href="rpg.css/rpg.css?v=9">
+</head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
@@ -35,10 +37,16 @@
 
         <div class="settings-strip panel">
           <label>Mode<select id="mode-select"><option value="letters">Random Letters</option><option value="numbers">Numbers</option><option value="mixed">Letters + Numbers</option><option value="words">Common Words</option><option value="halloween">Halloween Words</option><option value="sentences">Sentences</option><option value="halloween-sentences">Halloween Sentences</option></select></label>
-          <label>Group<select id="group-select"><option>1</option><option>3</option><option selected="">5</option><option>7</option><option>10</option></select></label>
+          <label>Group<select id="group-select"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>10</option></select></label>
           <label>Session<select id="session-select"><option value="0">Unlimited</option><option value="1">1 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="10">10 min</option></select></label>
           <div class="settings-summary"><strong id="summary">5 char · 5 eff · 699 Hz</strong><span>Ready to receive</span></div>
         </div>
+
+        <section class="panel theme-selector" id="practice-theme-selector" hidden aria-labelledby="practice-themes-title">
+          <div class="theme-selector-heading"><div><p class="eyebrow">SENTENCE THEMES</p><h2 id="practice-themes-title">Choose your themes</h2><p class="muted">Select one or more libraries for sentence practice.</p></div><button type="button" class="theme-select-all" id="theme-select-all">Select All</button></div>
+          <div class="theme-options" id="theme-options"></div>
+          <p class="theme-selection-message" id="theme-selection-message" role="status"></p>
+        </section>
 
         <section class="panel listening-card">
           <div class="card-heading"><div><p class="eyebrow">LISTENING WINDOW</p><p class="muted">No symbols are shown during transmission</p></div><strong class="progress-label" id="progress-label">Letter 1 of 5 letters</strong></div>
@@ -47,17 +55,17 @@
             <button class="primary" id="start-button">▶ <span>Start Transmission</span></button>
             <button id="replay-button">↻ <span>Replay</span></button>
             <button id="rewind-button" aria-label="Rewind to the previous letter" title="Rewind to the previous letter">◀</button>
-            <button id="pause-button" disabled="">Ⅱ <span>Pause</span></button>
-            <button id="stop-button" disabled="">■ <span>Stop</span></button>
+            <button id="pause-button" disabled>Ⅱ <span>Pause</span></button>
+            <button id="stop-button" disabled>■ <span>Stop</span></button>
           </div>
           <p class="shortcut-hint">Spacebar rewinds one letter during playback</p>
         </section>
 
         <section class="panel answer-card">
           <div class="card-heading"><div><h2>Your copy</h2><p class="muted">Click here to type while you listen.</p></div><strong id="score-label"></strong></div>
-          <textarea id="answer-input" rows="4" placeholder="Click to enter your copy…" spellcheck="false" readonly=""></textarea>
-          <div class="answer-actions"><button class="primary" id="submit-button" disabled="">✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><button class="primary continue-button" id="continue-button" hidden="">Next →</button><span class="answer-message" id="answer-message"></span></div>
-          <div class="result" id="result" hidden=""></div>
+          <textarea id="answer-input" rows="4" placeholder="Click to enter your copy…" spellcheck="false" readonly></textarea>
+          <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><button class="primary continue-button" id="continue-button" hidden>Next →</button><span class="answer-message" id="answer-message"></span></div>
+          <div class="result" id="result" hidden></div>
         </section>
 
       </section>
@@ -70,10 +78,16 @@
 
         <div class="settings-strip panel">
           <label>Mode<select id="listen-mode-select"><option value="letters">Random Letters</option><option value="numbers">Numbers</option><option value="mixed">Letters + Numbers</option><option value="words">Common Words</option><option value="halloween">Halloween Words</option><option value="sentences">Sentences</option><option value="halloween-sentences">Halloween Sentences</option></select></label>
-          <label>Group<select id="listen-group-select"><option>1</option><option>3</option><option selected="">5</option><option>7</option><option>10</option></select></label>
+          <label>Group<select id="listen-group-select"><option>1</option><option>3</option><option selected>5</option><option>7</option><option>10</option></select></label>
           <label>Session<select id="listen-session-select"><option value="0">Unlimited</option><option value="1">1 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="10">10 min</option></select></label>
           <div class="settings-summary"><strong id="listen-summary">5 char · 5 eff · 699 Hz</strong><span>Ready to receive</span></div>
         </div>
+
+        <section class="panel theme-selector" id="listen-theme-selector" hidden aria-labelledby="listen-themes-title">
+          <div class="theme-selector-heading"><div><p class="eyebrow">SENTENCE THEMES</p><h2 id="listen-themes-title">Choose your themes</h2><p class="muted">Select one or more libraries for sentence practice.</p></div><button type="button" class="theme-select-all" id="listen-theme-select-all">Select All</button></div>
+          <div class="theme-options" id="listen-theme-options"></div>
+          <p class="theme-selection-message" id="listen-theme-selection-message" role="status"></p>
+        </section>
 
         <section class="panel listening-card">
           <div class="card-heading"><div><p class="eyebrow">LISTENING WINDOW</p><p class="muted">No symbols or answer box in Zen Mode</p></div><strong class="progress-label" id="listen-progress-label">Letter 1 of 5 letters</strong></div>
@@ -82,9 +96,9 @@
             <button class="primary" id="listen-start-button">▶ <span>Start Transmission</span></button>
             <button id="listen-replay-button">↻ <span>Replay</span></button>
             <button id="listen-rewind-button" aria-label="Rewind to the previous letter" title="Rewind to the previous letter">◀</button>
-            <button id="listen-pause-button" disabled="">Ⅱ <span>Pause</span></button>
-            <button id="listen-stop-button" disabled="">■ <span>Stop</span></button>
-            <button class="primary continue-button" id="listen-next-button" hidden="">Next →</button>
+            <button id="listen-pause-button" disabled>Ⅱ <span>Pause</span></button>
+            <button id="listen-stop-button" disabled>■ <span>Stop</span></button>
+            <button class="primary continue-button" id="listen-next-button" disabled hidden>Next →</button>
           </div>
           <p class="shortcut-hint">Spacebar rewinds one letter during playback · Next advances after the transmission ends</p>
         </section>
@@ -95,20 +109,22 @@
 
         <section class="panel rpg-dashboard" aria-labelledby="progression-title">
           <div class="rpg-dashboard-heading"><div><p class="eyebrow">SIGNAL PATH</p><h2 id="progression-title">Level up your reception</h2><p class="muted">Every clean copy moves you closer to the next rank.</p></div><div class="rank-chip"><span id="rpg-rank-icon">◈</span><span id="rpg-rank">Signal Novice</span></div></div>
-          <div class="rpg-level-row"><div class="level-orb"><span>LEVEL</span><strong id="rpg-level">1</strong></div><div class="xp-panel"><div class="xp-label-row"><strong id="rpg-xp-label">90 / 100 XP</strong><span id="rpg-next-level">10 XP to next level</span></div><div class="xp-track"><div id="rpg-xp-fill" style="width: 90%;"></div></div><p id="rpg-xp-message" class="muted">Signal Novice · 1 perfect answer in a row</p></div></div>
+          <div class="rpg-level-row"><div class="level-orb"><span>LEVEL</span><strong id="rpg-level">1</strong></div><div class="xp-panel"><div class="xp-label-row"><strong id="rpg-xp-label">0 / 100 XP</strong><span id="rpg-next-level">100 XP to next level</span></div><div class="xp-track"><div id="rpg-xp-fill"></div></div><p id="rpg-xp-message" class="muted">Start a transmission to earn XP.</p></div></div>
         </section>
 
         <div class="rpg-two-column">
-          <section class="panel rpg-section daily-quest-panel" aria-labelledby="daily-title"><div class="section-heading"><div><p class="eyebrow">DAILY OBJECTIVES</p><h2 id="daily-title">Daily Quests</h2></div><span id="daily-date" class="muted">2026-10-22</span></div><div class="daily-quest-summary"><strong id="daily-quest-count">0/5 quests complete</strong><span id="daily-reset-countdown">Resets in 23:48:29</span><span id="daily-streak-status">Complete 3 more quests to qualify for today’s streak.</span></div><div class="quest-group"><div class="quest-group-label">Standard quests</div><div id="daily-quests-standard" class="challenge-list"><article class="challenge-card quest-card"><div class="challenge-icon">◇</div><div class="challenge-copy"><div class="quest-title-row"><strong>Warm-Up</strong><b>+25 XP</b></div><span>Decode 10 words correctly.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 10</small></div></article><article class="challenge-card quest-card"><div class="challenge-icon">◇</div><div class="challenge-copy"><div class="quest-title-row"><strong>Steady Signal</strong><b>+35 XP</b></div><span>Decode 30 characters correctly.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 30</small></div></article><article class="challenge-card quest-card"><div class="challenge-icon">◇</div><div class="challenge-copy"><div class="quest-title-row"><strong>Time on the Air</strong><b>+45 XP</b></div><span>Practice for 10 minutes.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 10</small></div></article></div></div><div class="quest-group"><div class="quest-group-label">Bonus quests</div><div id="daily-quests-bonus" class="challenge-list"><article class="challenge-card quest-card"><div class="challenge-icon">☾</div><div class="challenge-copy"><div class="quest-title-row"><strong>Haunted Warm-Up</strong><b>+75 XP</b></div><span>Decode 25 Halloween words correctly.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 25</small></div></article><article class="challenge-card quest-card"><div class="challenge-icon">◇</div><div class="challenge-copy"><div class="quest-title-row"><strong>CW Marathon</strong><b>+200 XP</b></div><span>Decode 250 characters correctly.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 250</small></div></article></div></div></section>
-          <section class="panel rpg-section" aria-labelledby="stats-title"><div class="section-heading"><div><p class="eyebrow">FIELD REPORT</p><h2 id="stats-title">Training Statistics</h2></div></div><div id="rpg-stat-grid" class="rpg-stat-grid"><div class="rpg-stat-tile"><span>Total XP</span><strong>90</strong></div><div class="rpg-stat-tile"><span>Level</span><strong>1</strong></div><div class="rpg-stat-tile"><span>Rank</span><strong>Signal Novice</strong></div><div class="rpg-stat-tile"><span>Overall accuracy</span><strong>50%</strong></div><div class="rpg-stat-tile"><span>Words decoded</span><strong>1</strong></div><div class="rpg-stat-tile"><span>Sentences decoded</span><strong>0</strong></div><div class="rpg-stat-tile"><span>Characters decoded</span><strong>4</strong></div><div class="rpg-stat-tile"><span>Perfect streak</span><strong>1</strong></div><div class="rpg-stat-tile"><span>Longest streak</span><strong>1</strong></div><div class="rpg-stat-tile"><span>Rewinds</span><strong>0</strong></div><div class="rpg-stat-tile"><span>Practice time</span><strong>22s</strong></div><div class="rpg-stat-tile"><span>Daily streak</span><strong>0</strong></div><div class="rpg-stat-tile"><span>Longest daily streak</span><strong>0</strong></div><div class="rpg-stat-tile"><span>Successful days</span><strong>0</strong></div><div class="rpg-stat-tile"><span>Quests completed</span><strong>0</strong></div><div class="rpg-stat-tile"><span>Achievements</span><strong>0/8</strong></div></div></section>
+          <section class="panel rpg-section daily-quest-panel" aria-labelledby="daily-title"><div class="section-heading"><div><p class="eyebrow">DAILY OBJECTIVES</p><h2 id="daily-title">Daily Quests</h2></div><span id="daily-date" class="muted"></span></div><div class="daily-quest-summary"><strong id="daily-quest-count">0/5 quests complete</strong><span id="daily-reset-countdown">Resets in --:--:--</span><span id="daily-streak-status">Complete 3 quests to qualify for today’s streak.</span></div><div class="quest-group"><div class="quest-group-label">Standard quests</div><div id="daily-quests-standard" class="challenge-list"></div></div><div class="quest-group"><div class="quest-group-label">Bonus quests</div><div id="daily-quests-bonus" class="challenge-list"></div></div></section>
+          <section class="panel rpg-section" aria-labelledby="stats-title"><div class="section-heading"><div><p class="eyebrow">FIELD REPORT</p><h2 id="stats-title">Training Statistics</h2></div></div><div id="rpg-stat-grid" class="rpg-stat-grid"></div></section>
         </div>
 
-        <section class="panel rpg-section" aria-labelledby="achievements-title"><div class="section-heading"><div><p class="eyebrow">TROPHIES</p><h2 id="achievements-title">Achievements</h2></div><span id="achievement-count" class="muted">0/8 unlocked</span></div><div id="achievement-grid" class="achievement-grid"><article class="achievement-card"><div class="achievement-icon">◇</div><div class="achievement-copy"><strong>First Transmission</strong><span>Complete your first daily quest.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 1</small></div></article><article class="achievement-card"><div class="achievement-icon">✦</div><div class="achievement-copy"><strong>Flawless Victory</strong><span>Complete a sentence with 100% accuracy.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 1</small></div></article><article class="achievement-card"><div class="achievement-icon">▣</div><div class="achievement-copy"><strong>Five-Day Streak</strong><span>Maintain a five-day daily practice streak.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 5</small></div></article><article class="achievement-card"><div class="achievement-icon">☾</div><div class="achievement-copy"><strong>Night Owl</strong><span>Successfully decode 100 Halloween-themed words.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 100</small></div></article><article class="achievement-card"><div class="achievement-icon">➤</div><div class="achievement-copy"><strong>Speed Demon</strong><span>Achieve 100% accuracy at 10 WPM.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 1</small></div></article><article class="achievement-card"><div class="achievement-icon">☠</div><div class="achievement-copy"><strong>Halloween Hero</strong><span>Complete 10 Halloween quests.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 10</small></div></article><article class="achievement-card"><div class="achievement-icon">♛</div><div class="achievement-copy"><strong>Morse Master</strong><span>Complete 1,000 practice exercises.</span><div class="challenge-progress"><i style="width:0.2%"></i></div><small>2 / 1000</small></div></article><article class="achievement-card"><div class="achievement-icon">★</div><div class="achievement-copy"><strong>CW Champion</strong><span>Complete 100 daily quests.</span><div class="challenge-progress"><i style="width:0%"></i></div><small>0 / 100</small></div></article></div></section>
+        <section class="panel rpg-section theme-progress-section" aria-labelledby="theme-progress-title"><div class="section-heading"><div><p class="eyebrow">THEMED RECEPTION</p><h2 id="theme-progress-title">Sentence Library Progress</h2><p class="muted">Unique themed sentences completed with a perfect copy.</p></div></div><div id="theme-progress-grid" class="theme-progress-grid"></div></section>
+
+        <section class="panel rpg-section" aria-labelledby="achievements-title"><div class="section-heading"><div><p class="eyebrow">TROPHIES</p><h2 id="achievements-title">Achievements</h2></div><span id="achievement-count" class="muted"></span></div><div id="achievement-grid" class="achievement-grid"></div></section>
       </section>
 
       <section class="view" id="alphabet-view" aria-labelledby="alphabet-title">
         <header class="page-header"><div><p class="eyebrow">REFERENCE</p><h1 id="alphabet-title">Morse Code Alphabet</h1><p>International Morse Code, always available offline.</p></div></header>
-        <div class="alphabet-grid panel" id="alphabet-grid"><div class="morse-cell"><strong>0</strong><code>-----</code></div><div class="morse-cell"><strong>1</strong><code>.----</code></div><div class="morse-cell"><strong>2</strong><code>..---</code></div><div class="morse-cell"><strong>3</strong><code>...--</code></div><div class="morse-cell"><strong>4</strong><code>....-</code></div><div class="morse-cell"><strong>5</strong><code>.....</code></div><div class="morse-cell"><strong>6</strong><code>-....</code></div><div class="morse-cell"><strong>7</strong><code>--...</code></div><div class="morse-cell"><strong>8</strong><code>---..</code></div><div class="morse-cell"><strong>9</strong><code>----.</code></div><div class="morse-cell"><strong>A</strong><code>.-</code></div><div class="morse-cell"><strong>B</strong><code>-...</code></div><div class="morse-cell"><strong>C</strong><code>-.-.</code></div><div class="morse-cell"><strong>D</strong><code>-..</code></div><div class="morse-cell"><strong>E</strong><code>.</code></div><div class="morse-cell"><strong>F</strong><code>..-.</code></div><div class="morse-cell"><strong>G</strong><code>--.</code></div><div class="morse-cell"><strong>H</strong><code>....</code></div><div class="morse-cell"><strong>I</strong><code>..</code></div><div class="morse-cell"><strong>J</strong><code>.---</code></div><div class="morse-cell"><strong>K</strong><code>-.-</code></div><div class="morse-cell"><strong>L</strong><code>.-..</code></div><div class="morse-cell"><strong>M</strong><code>--</code></div><div class="morse-cell"><strong>N</strong><code>-.</code></div><div class="morse-cell"><strong>O</strong><code>---</code></div><div class="morse-cell"><strong>P</strong><code>.--.</code></div><div class="morse-cell"><strong>Q</strong><code>--.-</code></div><div class="morse-cell"><strong>R</strong><code>.-.</code></div><div class="morse-cell"><strong>S</strong><code>...</code></div><div class="morse-cell"><strong>T</strong><code>-</code></div><div class="morse-cell"><strong>U</strong><code>..-</code></div><div class="morse-cell"><strong>V</strong><code>...-</code></div><div class="morse-cell"><strong>W</strong><code>.--</code></div><div class="morse-cell"><strong>X</strong><code>-..-</code></div><div class="morse-cell"><strong>Y</strong><code>-.--</code></div><div class="morse-cell"><strong>Z</strong><code>--..</code></div><div class="morse-cell"><strong>.</strong><code>.-.-.-</code></div><div class="morse-cell"><strong>,</strong><code>--..--</code></div><div class="morse-cell"><strong>?</strong><code>..--..</code></div><div class="morse-cell"><strong>/</strong><code>-..-.</code></div><div class="morse-cell"><strong>=</strong><code>-...-</code></div></div>
+        <div class="alphabet-grid panel" id="alphabet-grid"></div>
       </section>
 
       <section class="view" id="sending-view" aria-labelledby="sending-title">
@@ -122,7 +138,7 @@
         <header class="page-header"><div><p class="eyebrow">PREFERENCES</p><h1 id="settings-title">Settings</h1><p>Shape the timing and feel of your practice sessions.</p></div></header>
         <div class="panel settings-form">
           <div class="setting-section"><h2>CW timing</h2><label>Character speed <output id="character-wpm-value">5 WPM</output><input id="character-wpm" type="range" min="1" max="40" value="5"></label><label>Effective speed <output id="effective-wpm-value">5 WPM</output><input id="effective-wpm" type="range" min="1" max="40" value="5"></label><label>Tone frequency <output id="frequency-value">699 Hz</output><input id="frequency" type="range" min="300" max="1000" value="699"></label><label>Volume <output id="volume-value">62%</output><input id="volume" type="range" min="0" max="100" value="62"></label><button id="reset-settings">Reset to Standard Timing</button></div>
-          <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked=""></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
+          <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
           <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Your settings and progress stay in this browser on this device.</p></div>
         </div>
       </section>
@@ -130,8 +146,7 @@
   </div>
   <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=15"></script>
-  <script src="app.js?v=35"></script>
-
-
-</body></html>
+  <script src="rpg.js?v=16"></script>
+  <script src="app.js?v=36"></script>
+</body>
+</html>

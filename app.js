@@ -51,6 +51,16 @@
     "THE PUMPKIN PATCH GLOWS AT NIGHT.", "A WOLF HOWLS BEHIND THE HOUSE.", "THE CEMETERY IS QUIET TONIGHT.",
     "THE SPELL FADES AT SUNRISE.", "A GHOST RINGS THE DOORBELL.", "THE CANDY DISAPPEARS FROM THE BOWL."
   ];
+  const THEME_STORAGE_KEY = "morseReceiveSentenceThemes";
+  const THEME_META = [
+    { id: "video-games", icon: "🎮", name: "Video Games" },
+    { id: "movies-tv", icon: "🎬", name: "Movies & TV" },
+    { id: "famous-quotes", icon: "💬", name: "Famous Quotes" },
+    { id: "jokes-riddles", icon: "😂", name: "Jokes & Riddles" },
+    { id: "music", icon: "🎵", name: "Music" },
+    { id: "general-sentences", icon: "📝", name: "General Sentences" }
+  ];
+  const THEME_IDS = THEME_META.map((theme) => theme.id);
   const STORAGE_KEY = "morseReceiveSettings";
   const STANDARD = {
     characterWpm: 5, effectiveWpm: 5, frequency: 699, volume: 62,
@@ -60,16 +70,23 @@
 
   const $ = (id) => document.getElementById(id);
   const exercisePools = new Map();
+  const themePools = new Map();
+  const themeCache = new Map();
   const settings = loadSettings();
+  let selectedThemes = loadSelectedThemes();
   window.morseSettings = settings;
   const playback = {
     active: false, paused: false, countdown: false, currentIndex: 0,
     runId: 0, audio: null, oscillator: null, toastTimer: null, successAudio: null
   };
   let exercise = "";
+  let exerciseThemeId = "";
+  let exerciseGeneration = 0;
   let lastAnswerCorrect = false;
   let awaitingNext = false;
   let listenExercise = "";
+  let listenThemeId = "";
+  let listenGeneration = 0;
   let listenAwaitingNext = false;
   const listenPlayback = {
     active: false, paused: false, countdown: false, currentIndex: 0,
@@ -90,6 +107,130 @@
     } catch (_) {
       // Settings remain active for the current session if storage is blocked.
     }
+  }
+
+  function loadSelectedThemes() {
+    try {
+      const saved = JSON.parse(window.localStorage?.getItem(THEME_STORAGE_KEY) || "null");
+      const valid = Array.isArray(saved) ? saved.filter((id) => THEME_IDS.includes(id)) : [];
+      return valid.length ? [...new Set(valid)] : [...THEME_IDS];
+    } catch (_) {
+      return [...THEME_IDS];
+    }
+  }
+
+  function saveSelectedThemes() {
+    try {
+      window.localStorage?.setItem(THEME_STORAGE_KEY, JSON.stringify(selectedThemes));
+    } catch (_) {
+      // The selection remains active for the current session if storage is blocked.
+    }
+  }
+
+  function isThemedSentenceMode(mode) {
+    return mode === "sentences";
+  }
+
+  function themePoolKey(prefix) {
+    return `${prefix}:${selectedThemes.slice().sort().join("|")}`;
+  }
+
+  async function loadThemeData(themeId) {
+    if (!themeCache.has(themeId)) {
+      const request = fetch(`themes/${themeId}.json`).then((response) => {
+        if (!response.ok) throw new Error(`Unable to load the ${themeId} sentence library.`);
+        return response.json();
+      });
+      themeCache.set(themeId, request);
+    }
+    return themeCache.get(themeId);
+  }
+
+  async function loadThemePool(prefix) {
+    const key = themePoolKey(prefix);
+    const loaded = await Promise.all(selectedThemes.map(async (themeId) => {
+      const data = await loadThemeData(themeId);
+      return Object.values(data).flat().map((text) => ({ text, themeId }));
+    }));
+    return { key, items: loaded.flat() };
+  }
+
+  function drawThemeUnused(items, key) {
+    let used = themePools.get(key);
+    if (!(used instanceof Set)) {
+      used = new Set();
+      themePools.set(key, used);
+    }
+    let available = items.filter((item) => !used.has(item.text));
+    if (!available.length) {
+      used.clear();
+      available = items;
+    }
+    const selected = randomFrom(available);
+    used.add(selected.text);
+    return selected;
+  }
+
+  function themeOptionMarkup(theme) {
+    const checked = selectedThemes.includes(theme.id) ? " checked" : "";
+    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true">${theme.icon}</span><span><strong>${theme.name}</strong><small>500 sentences</small></span></label>`;
+  }
+
+  function renderThemeSelectors() {
+    ["theme-options", "listen-theme-options"].forEach((id) => {
+      const container = $(id);
+      if (!container) return;
+      container.innerHTML = THEME_META.map(themeOptionMarkup).join("");
+      container.querySelectorAll("input").forEach((input) => input.addEventListener("change", handleThemeChange));
+    });
+    ["theme-select-all", "listen-theme-select-all"].forEach((id) => {
+      const button = $(id);
+      if (button) button.addEventListener("click", selectAllThemes);
+    });
+    updateThemeSelectionMessage();
+  }
+
+  function updateThemeSelectionMessage(message = "") {
+    const selectedText = `${selectedThemes.length} theme${selectedThemes.length === 1 ? "" : "s"} selected`;
+    ["theme-selection-message", "listen-theme-selection-message"].forEach((id) => {
+      const element = $(id);
+      if (element) element.textContent = message || `${selectedText}. Sentences will not repeat until the selected library is exhausted.`;
+    });
+    ["theme-select-all", "listen-theme-select-all"].forEach((id) => {
+      const button = $(id);
+      if (button) button.textContent = selectedThemes.length === THEME_IDS.length ? "All Selected" : "Select All";
+    });
+  }
+
+  function updateThemeSelectorVisibility() {
+    const practiceVisible = isThemedSentenceMode($("mode-select").value);
+    const listenVisible = isThemedSentenceMode($("listen-mode-select").value);
+    if ($("practice-theme-selector")) $("practice-theme-selector").hidden = !practiceVisible;
+    if ($("listen-theme-selector")) $("listen-theme-selector").hidden = !listenVisible;
+  }
+
+  function handleThemeChange(event) {
+    const checked = [...event.currentTarget.closest(".theme-options").querySelectorAll("input:checked")].map((input) => input.value);
+    if (!checked.length) {
+      renderThemeSelectors();
+      updateThemeSelectionMessage("Keep at least one theme selected.");
+      return;
+    }
+    selectedThemes = THEME_IDS.filter((id) => checked.includes(id));
+    saveSelectedThemes();
+    updateThemeSelectionMessage();
+    themePools.clear();
+    if (isThemedSentenceMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
+    if (isThemedSentenceMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
+  }
+
+  function selectAllThemes() {
+    selectedThemes = [...THEME_IDS];
+    saveSelectedThemes();
+    renderThemeSelectors();
+    themePools.clear();
+    if (isThemedSentenceMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
+    if (isThemedSentenceMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
   }
 
   function randomFrom(value) {
@@ -185,9 +326,11 @@
     return listenPositionLabel(index).replace(/ of \d+ letters$/, "");
   }
 
-  function generateExercise() {
+  async function generateExercise() {
+    const generation = ++exerciseGeneration;
     const mode = $("mode-select").value;
     const group = Number($("group-select").value);
+    exerciseThemeId = "";
     if (mode === "numbers") {
       exercise = randomSequence(NUMBERS, group, `${mode}:${group}`);
     } else if (mode === "mixed") {
@@ -198,12 +341,28 @@
       const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
       const possible = source.filter((word) => word.length <= lengthAllowance);
       exercise = drawUnused(source, mode, possible.length ? possible : source);
-    } else if (mode === "sentences" || mode === "halloween-sentences") {
-      const source = mode === "halloween-sentences" ? HALLOWEEN_SENTENCES : SENTENCES;
-      exercise = drawUnused(source, mode);
+    } else if (mode === "sentences") {
+      setStatus("Loading themes…");
+      let pool;
+      try {
+        pool = await loadThemePool("practice");
+      } catch (error) {
+        if (generation !== exerciseGeneration) return;
+        exercise = drawUnused(SENTENCES, "sentences-fallback");
+        showToast(error.message);
+      }
+      if (generation !== exerciseGeneration) return;
+      if (pool) {
+        const selected = drawThemeUnused(pool.items, pool.key);
+        exercise = selected.text;
+        exerciseThemeId = selected.themeId;
+      }
+    } else if (mode === "halloween-sentences") {
+      exercise = drawUnused(HALLOWEEN_SENTENCES, mode);
     } else {
       exercise = randomSequence(LETTERS, group, `${mode}:${group}`);
     }
+    if (generation !== exerciseGeneration) return;
     playback.currentIndex = 0;
     awaitingNext = false;
     updateProgress(0);
@@ -216,13 +375,16 @@
     $("result").classList.remove("perfect-result");
     $("continue-button").hidden = true;
     updateSummary();
+    updateThemeSelectorVisibility();
     window.morseCurrentExercise = exercise;
-    notifyRpg("exercise-start", { mode, text: exercise });
+    notifyRpg("exercise-start", { mode, text: exercise, themeId: exerciseThemeId });
   }
 
-  function generateListenExercise() {
+  async function generateListenExercise() {
+    const generation = ++listenGeneration;
     const mode = $("listen-mode-select").value;
     const group = Number($("listen-group-select").value);
+    listenThemeId = "";
     if (mode === "numbers") {
       listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
     } else if (mode === "mixed") {
@@ -232,12 +394,28 @@
       const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
       const possible = source.filter((word) => word.length <= lengthAllowance);
       listenExercise = drawUnused(source, `listen:${mode}`, possible.length ? possible : source);
-    } else if (mode === "sentences" || mode === "halloween-sentences") {
-      const source = mode === "halloween-sentences" ? HALLOWEEN_SENTENCES : SENTENCES;
-      listenExercise = drawUnused(source, `listen:${mode}`);
+    } else if (mode === "sentences") {
+      setListenStatus("Loading themes…");
+      let pool;
+      try {
+        pool = await loadThemePool("listen");
+      } catch (error) {
+        if (generation !== listenGeneration) return;
+        listenExercise = drawUnused(SENTENCES, "listen:sentences-fallback");
+        showToast(error.message);
+      }
+      if (generation !== listenGeneration) return;
+      if (pool) {
+        const selected = drawThemeUnused(pool.items, pool.key);
+        listenExercise = selected.text;
+        listenThemeId = selected.themeId;
+      }
+    } else if (mode === "halloween-sentences") {
+      listenExercise = drawUnused(HALLOWEEN_SENTENCES, `listen:${mode}`);
     } else {
       listenExercise = randomSequence(LETTERS, group, `listen:${mode}:${group}`);
     }
+    if (generation !== listenGeneration) return;
     listenPlayback.currentIndex = 0;
     listenAwaitingNext = false;
     updateListenProgress(0);
@@ -247,6 +425,7 @@
     $("listen-next-button").disabled = false;
     $("listen-start-button").hidden = false;
     $("listen-start-button").disabled = false;
+    updateThemeSelectorVisibility();
     updateListenSummary();
   }
 
@@ -303,7 +482,17 @@
     playback.toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
   }
 
-  function playPerfectCopySound(){if(!playback.successAudio){playback.successAudio=new Audio("mrstokes302-success-videogame-sfx-mrstokes302-423626.mp3");playback.successAudio.volume=.9;}playback.successAudio.currentTime=0;const playPromise=playback.successAudio.play();if(playPromise?.catch)playPromise.catch(()=>{});} function setStatus(message) {
+  function playPerfectCopySound() {
+    if (!playback.successAudio) {
+      playback.successAudio = new Audio("assets/perfect-copy.mp3");
+      playback.successAudio.volume = 0.9;
+    }
+    playback.successAudio.currentTime = 0;
+    const playPromise = playback.successAudio.play();
+    if (playPromise?.catch) playPromise.catch(() => {});
+  }
+
+  function setStatus(message) {
     $("status-label").textContent = message;
   }
 
@@ -723,6 +912,8 @@
       $("listen-replay-button").disabled = false;
       $("listen-pause-button").disabled = true;
       $("listen-stop-button").disabled = true;
+      $("listen-next-button").hidden = true;
+      $("listen-next-button").disabled = true;
       showToast(error.message);
       return;
     }
@@ -766,7 +957,7 @@
     $("listen-pause-button").disabled = true;
     $("listen-stop-button").disabled = true;
     $("listen-next-button").hidden = !keepNextButton;
-    $("listen-next-button").disabled = false;
+    $("listen-next-button").disabled = true;
     $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     setListenStatus(compactListenPositionLabel(Math.min(listenPlayback.currentIndex, Math.max(0, listenExercise.length - 1))));
   }
@@ -779,16 +970,16 @@
     setListenStatus(`${compactListenPositionLabel(listenPlayback.currentIndex)}${listenPlayback.paused ? " · Paused" : ""}`);
   }
 
-  function continueListenToNext() {
+  async function continueListenToNext() {
     if (!listenExercise) return;
     stopListenTransmission();
-    generateListenExercise();
+    await generateListenExercise();
     startListenTransmission();
   }
 
-  function changeListenExercise() {
+  async function changeListenExercise() {
     if (listenPlayback.active || listenPlayback.paused || listenAwaitingNext) stopListenTransmission();
-    generateListenExercise();
+    await generateListenExercise();
   }
 
   function scoreAnswer(source = "submit") {
@@ -810,8 +1001,11 @@
     $("result").hidden = false;
     const reward = lastAnswerCorrect ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
     $("result").innerHTML = `${reward}<strong>Expected: ${escapeHtml(expected)}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
-    if (lastAnswerCorrect && source === "submit") { playPerfectCopySound(); showToast("Perfect copy! Great work."); }
-    notifyRpg("score", { source, mode: $("mode-select").value, accuracy, matches, maxLength, expected, actual });
+    if (lastAnswerCorrect && source === "submit") {
+      playPerfectCopySound();
+      showToast("Perfect copy! Great work.");
+    }
+    notifyRpg("score", { source, mode: $("mode-select").value, themeId: exerciseThemeId, accuracy, matches, maxLength, expected, actual });
   }
 
   function revealAnswer() {
@@ -820,7 +1014,7 @@
     scoreAnswer("reveal");
   }
 
-  function continueToNext() {
+  async function continueToNext() {
     if (!awaitingNext) return;
     awaitingNext = false;
     stopTransmission();
@@ -833,7 +1027,7 @@
       startTransmission();
       return;
     }
-    generateExercise();
+    await generateExercise();
     startTransmission();
   }
 
@@ -853,7 +1047,7 @@
 
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
-    $("mode-select").addEventListener("change", generateExercise);
+    $("mode-select").addEventListener("change", () => generateExercise());
     $("group-select").addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
     $("start-button").addEventListener("click", startTransmission);
@@ -861,8 +1055,8 @@
     $("rewind-button").addEventListener("click", rewindOneLetter);
     $("pause-button").addEventListener("click", togglePause);
     $("stop-button").addEventListener("click", stopTransmission);
-    $("listen-mode-select").addEventListener("change", changeListenExercise);
-    $("listen-group-select").addEventListener("change", changeListenExercise);
+    $("listen-mode-select").addEventListener("change", () => changeListenExercise());
+    $("listen-group-select").addEventListener("change", () => changeListenExercise());
     $("listen-session-select").addEventListener("change", () => showToast($("listen-session-select").value === "0" ? "Unlimited session selected" : `${$("listen-session-select").value}-minute session selected`));
     $("listen-start-button").addEventListener("click", startListenTransmission);
     $("listen-replay-button").addEventListener("click", () => { stopListenTransmission(true); playListenFrom(0); });
@@ -922,7 +1116,9 @@
   updateSettingDisplays();
   updateProfile();
   renderAlphabet();
+  renderThemeSelectors();
   bindEvents();
+  updateThemeSelectorVisibility();
   generateExercise();
   generateListenExercise();
   disarmAnswerInput();
