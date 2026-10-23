@@ -132,6 +132,14 @@
     return mode === "sentences";
   }
 
+  function isThemedWordMode(mode) {
+    return mode === "words";
+  }
+
+  function isThemedPracticeMode(mode) {
+    return isThemedSentenceMode(mode) || isThemedWordMode(mode);
+  }
+
   function themePoolKey(prefix) {
     return `${prefix}:${selectedThemes.slice().sort().join("|")}`;
   }
@@ -156,6 +164,20 @@
     return { key, items: loaded.flat() };
   }
 
+  function extractThemeWords(data) {
+    const words = Object.values(data).flat().flatMap((text) => String(text).match(/[A-Z]+/gi) || []);
+    return [...new Set(words.map((word) => word.toUpperCase()))];
+  }
+
+  async function loadThemeWordPool(prefix) {
+    const key = themePoolKey(`${prefix}:words`);
+    const loaded = await Promise.all(selectedThemes.map(async (themeId) => {
+      const data = await loadThemeData(themeId);
+      return extractThemeWords(data).map((text) => ({ text, themeId }));
+    }));
+    return { key, items: loaded.flat() };
+  }
+
   function drawThemeUnused(items, key) {
     let used = themePools.get(key);
     if (!(used instanceof Set)) {
@@ -172,16 +194,33 @@
     return selected;
   }
 
-  function themeOptionMarkup(theme) {
+  function themeOptionMarkup(theme, mode = "sentences") {
     const checked = selectedThemes.includes(theme.id) ? " checked" : "";
-    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true">${theme.icon}</span><span><strong>${theme.name}</strong><small>500 sentences</small></span></label>`;
+    const detail = isThemedWordMode(mode) ? "Single words" : "500 sentences";
+    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true">${theme.icon}</span><span><strong>${theme.name}</strong><small>${detail}</small></span></label>`;
+  }
+
+  function updateThemeSelectorCopy() {
+    const selectors = [
+      { mode: $("mode-select")?.value, eyebrow: "practice-theme-eyebrow", description: "practice-theme-description" },
+      { mode: $("listen-mode-select")?.value, eyebrow: "listen-theme-eyebrow", description: "listen-theme-description" }
+    ];
+    selectors.forEach(({ mode, eyebrow, description }) => {
+      const wordMode = isThemedWordMode(mode);
+      if ($(eyebrow)) $(eyebrow).textContent = wordMode ? "WORD THEMES" : "SENTENCE THEMES";
+      if ($(description)) $(description).textContent = wordMode ? "Select one or more libraries for single-word practice." : "Select one or more libraries for sentence practice.";
+    });
   }
 
   function renderThemeSelectors() {
+    updateThemeSelectorCopy();
+    const practiceMode = $("mode-select")?.value || "sentences";
+    const listenMode = $("listen-mode-select")?.value || "sentences";
     ["theme-options", "listen-theme-options"].forEach((id) => {
       const container = $(id);
       if (!container) return;
-      container.innerHTML = THEME_META.map(themeOptionMarkup).join("");
+      const mode = id === "theme-options" ? practiceMode : listenMode;
+      container.innerHTML = THEME_META.map((theme) => themeOptionMarkup(theme, mode)).join("");
       container.querySelectorAll("input").forEach((input) => input.addEventListener("change", handleThemeChange));
     });
     ["theme-select-all", "listen-theme-select-all"].forEach((id) => {
@@ -193,9 +232,14 @@
 
   function updateThemeSelectionMessage(message = "") {
     const selectedText = `${selectedThemes.length} theme${selectedThemes.length === 1 ? "" : "s"} selected`;
-    ["theme-selection-message", "listen-theme-selection-message"].forEach((id) => {
+    const messages = [
+      { id: "theme-selection-message", mode: $("mode-select")?.value },
+      { id: "listen-theme-selection-message", mode: $("listen-mode-select")?.value }
+    ];
+    messages.forEach(({ id, mode }) => {
       const element = $(id);
-      if (element) element.textContent = message || `${selectedText}. Sentences will not repeat until the selected library is exhausted.`;
+      const contentType = isThemedWordMode(mode) ? "Words" : "Sentences";
+      if (element) element.textContent = message || `${selectedText}. ${contentType} will not repeat until the selected library is exhausted.`;
     });
     ["theme-select-all", "listen-theme-select-all"].forEach((id) => {
       const button = $(id);
@@ -204,8 +248,9 @@
   }
 
   function updateThemeSelectorVisibility() {
-    const practiceVisible = isThemedSentenceMode($("mode-select").value);
-    const listenVisible = isThemedSentenceMode($("listen-mode-select").value);
+    updateThemeSelectorCopy();
+    const practiceVisible = isThemedPracticeMode($("mode-select").value);
+    const listenVisible = isThemedPracticeMode($("listen-mode-select").value);
     if ($("practice-theme-selector")) $("practice-theme-selector").hidden = !practiceVisible;
     if ($("listen-theme-selector")) $("listen-theme-selector").hidden = !listenVisible;
   }
@@ -221,8 +266,8 @@
     saveSelectedThemes();
     updateThemeSelectionMessage();
     themePools.clear();
-    if (isThemedSentenceMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
-    if (isThemedSentenceMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
+    if (isThemedPracticeMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
+    if (isThemedPracticeMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
   }
 
   function selectAllThemes() {
@@ -230,8 +275,8 @@
     saveSelectedThemes();
     renderThemeSelectors();
     themePools.clear();
-    if (isThemedSentenceMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
-    if (isThemedSentenceMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
+    if (isThemedPracticeMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
+    if (isThemedPracticeMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
   }
 
   function randomFrom(value) {
@@ -337,11 +382,26 @@
     } else if (mode === "mixed") {
       const source = LETTERS + NUMBERS;
       exercise = randomSequence(source, group, `${mode}:${group}`);
-    } else if (mode === "words" || mode === "halloween") {
-      const source = mode === "halloween" ? HALLOWEEN_WORDS : WORDS;
-      const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
-      const possible = source.filter((word) => word.length <= lengthAllowance);
-      exercise = drawUnused(source, mode, possible.length ? possible : source);
+    } else if (mode === "words") {
+      setStatus("Loading word themes…");
+      let pool;
+      try {
+        pool = await loadThemeWordPool("practice");
+      } catch (error) {
+        if (generation !== exerciseGeneration) return;
+        showToast(error.message);
+      }
+      if (generation !== exerciseGeneration) return;
+      if (pool?.items.length) {
+        const lengthAllowance = group + 2;
+        const possible = pool.items.filter((item) => item.text.length <= lengthAllowance);
+        const selected = drawThemeUnused(possible.length ? possible : pool.items, pool.key);
+        exercise = selected.text;
+        exerciseThemeId = selected.themeId;
+      } else {
+        const possible = WORDS.filter((word) => word.length <= group + 2);
+        exercise = drawUnused(WORDS, mode, possible.length ? possible : WORDS);
+      }
     } else if (mode === "sentences") {
       setStatus("Loading themes…");
       let pool;
@@ -390,11 +450,26 @@
       listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
     } else if (mode === "mixed") {
       listenExercise = randomSequence(LETTERS + NUMBERS, group, `listen:${mode}:${group}`);
-    } else if (mode === "words" || mode === "halloween") {
-      const source = mode === "halloween" ? HALLOWEEN_WORDS : WORDS;
-      const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
-      const possible = source.filter((word) => word.length <= lengthAllowance);
-      listenExercise = drawUnused(source, `listen:${mode}`, possible.length ? possible : source);
+    } else if (mode === "words") {
+      setListenStatus("Loading word themes…");
+      let pool;
+      try {
+        pool = await loadThemeWordPool("listen");
+      } catch (error) {
+        if (generation !== listenGeneration) return;
+        showToast(error.message);
+      }
+      if (generation !== listenGeneration) return;
+      if (pool?.items.length) {
+        const lengthAllowance = group + 2;
+        const possible = pool.items.filter((item) => item.text.length <= lengthAllowance);
+        const selected = drawThemeUnused(possible.length ? possible : pool.items, pool.key);
+        listenExercise = selected.text;
+        listenThemeId = selected.themeId;
+      } else {
+        const possible = WORDS.filter((word) => word.length <= group + 2);
+        listenExercise = drawUnused(WORDS, `listen:${mode}`, possible.length ? possible : WORDS);
+      }
     } else if (mode === "sentences") {
       setListenStatus("Loading themes…");
       let pool;
@@ -1048,7 +1123,7 @@
 
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
-    $("mode-select").addEventListener("change", () => generateExercise());
+    $("mode-select").addEventListener("change", () => { renderThemeSelectors(); generateExercise(); });
     $("group-select").addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
     $("start-button").addEventListener("click", startTransmission);
@@ -1056,7 +1131,7 @@
     $("rewind-button").addEventListener("click", rewindOneLetter);
     $("pause-button").addEventListener("click", togglePause);
     $("stop-button").addEventListener("click", stopTransmission);
-    $("listen-mode-select").addEventListener("change", () => changeListenExercise());
+    $("listen-mode-select").addEventListener("change", () => { renderThemeSelectors(); changeListenExercise(); });
     $("listen-group-select").addEventListener("change", () => changeListenExercise());
     $("listen-session-select").addEventListener("change", () => showToast($("listen-session-select").value === "0" ? "Unlimited session selected" : `${$("listen-session-select").value}-minute session selected`));
     $("listen-start-button").addEventListener("click", startListenTransmission);
