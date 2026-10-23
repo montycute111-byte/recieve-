@@ -247,7 +247,7 @@
   }
 
   function isWordMode(mode) {
-    return mode === "words" || mode === "halloween";
+    return mode === "phrases" || mode === "words" || mode === "halloween";
   }
 
   function isSentenceMode(mode) {

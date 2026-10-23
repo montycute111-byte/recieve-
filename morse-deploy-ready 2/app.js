@@ -132,13 +132,21 @@
     return mode === "sentences";
   }
 
+  function isThemedWordMode(mode) {
+    return mode === "phrases";
+  }
+
+  function isThemedPracticeMode(mode) {
+    return isThemedSentenceMode(mode) || isThemedWordMode(mode);
+  }
+
   function themePoolKey(prefix) {
     return `${prefix}:${selectedThemes.slice().sort().join("|")}`;
   }
 
   async function loadThemeData(themeId) {
     if (!themeCache.has(themeId)) {
-      const request = fetch(`themes/${themeId}.json`).then((response) => {
+      const request = fetch(`themes/${themeId}.json?v=2`).then((response) => {
         if (!response.ok) throw new Error(`Unable to load the ${themeId} sentence library.`);
         return response.json();
       });
@@ -148,10 +156,21 @@
   }
 
   async function loadThemePool(prefix) {
-    const key = themePoolKey(prefix);
+    const key = themePoolKey(`${prefix}:sentences`);
     const loaded = await Promise.all(selectedThemes.map(async (themeId) => {
       const data = await loadThemeData(themeId);
-      return Object.values(data).flat().map((text) => ({ text, themeId }));
+      const sentences = ["short", "medium", "long"].flatMap((group) => Array.isArray(data[group]) ? data[group] : []);
+      return sentences.map((text) => ({ text, themeId }));
+    }));
+    return { key, items: loaded.flat() };
+  }
+
+
+  async function loadThemePhrasePool(prefix) {
+    const key = themePoolKey(`${prefix}:phrases`);
+    const loaded = await Promise.all(selectedThemes.map(async (themeId) => {
+      const data = await loadThemeData(themeId);
+      return (Array.isArray(data.phrases) ? data.phrases : []).map((text) => ({ text, themeId }));
     }));
     return { key, items: loaded.flat() };
   }
@@ -172,16 +191,18 @@
     return selected;
   }
 
-  function themeOptionMarkup(theme) {
+  function themeOptionMarkup(theme, mode = "sentences") {
     const checked = selectedThemes.includes(theme.id) ? " checked" : "";
-    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true">${theme.icon}</span><span><strong>${theme.name}</strong><small>500 sentences</small></span></label>`;
+    const detail = isThemedWordMode(mode) ? "1–4 word phrases" : "500 sentences";
+    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true">${theme.icon}</span><span><strong>${theme.name}</strong><small>${detail}</small></span></label>`;
   }
 
   function renderThemeSelectors() {
     ["theme-options", "listen-theme-options"].forEach((id) => {
       const container = $(id);
       if (!container) return;
-      container.innerHTML = THEME_META.map(themeOptionMarkup).join("");
+      const mode = id === "theme-options" ? $("mode-select").value : $("listen-mode-select").value;
+      container.innerHTML = THEME_META.map((theme) => themeOptionMarkup(theme, mode)).join("");
       container.querySelectorAll("input").forEach((input) => input.addEventListener("change", handleThemeChange));
     });
     ["theme-select-all", "listen-theme-select-all"].forEach((id) => {
@@ -195,7 +216,9 @@
     const selectedText = `${selectedThemes.length} theme${selectedThemes.length === 1 ? "" : "s"} selected`;
     ["theme-selection-message", "listen-theme-selection-message"].forEach((id) => {
       const element = $(id);
-      if (element) element.textContent = message || `${selectedText}. Sentences will not repeat until the selected library is exhausted.`;
+      const mode = id === "theme-selection-message" ? $("mode-select").value : $("listen-mode-select").value;
+      const contentType = isThemedWordMode(mode) ? "Phrases" : "Sentences";
+      if (element) element.textContent = message || `${selectedText}. ${contentType} will not repeat until the selected library is exhausted.`;
     });
     ["theme-select-all", "listen-theme-select-all"].forEach((id) => {
       const button = $(id);
@@ -204,8 +227,8 @@
   }
 
   function updateThemeSelectorVisibility() {
-    const practiceVisible = isThemedSentenceMode($("mode-select").value);
-    const listenVisible = isThemedSentenceMode($("listen-mode-select").value);
+    const practiceVisible = isThemedPracticeMode($("mode-select").value);
+    const listenVisible = isThemedPracticeMode($("listen-mode-select").value);
     if ($("practice-theme-selector")) $("practice-theme-selector").hidden = !practiceVisible;
     if ($("listen-theme-selector")) $("listen-theme-selector").hidden = !listenVisible;
   }
@@ -221,8 +244,8 @@
     saveSelectedThemes();
     updateThemeSelectionMessage();
     themePools.clear();
-    if (isThemedSentenceMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
-    if (isThemedSentenceMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
+    if (isThemedPracticeMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
+    if (isThemedPracticeMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
   }
 
   function selectAllThemes() {
@@ -230,8 +253,8 @@
     saveSelectedThemes();
     renderThemeSelectors();
     themePools.clear();
-    if (isThemedSentenceMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
-    if (isThemedSentenceMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
+    if (isThemedPracticeMode($("mode-select").value) && !playback.active && !awaitingNext) generateExercise();
+    if (isThemedPracticeMode($("listen-mode-select").value) && !listenPlayback.active && !listenAwaitingNext) changeListenExercise();
   }
 
   function randomFrom(value) {
@@ -283,7 +306,7 @@
   }
 
   function isWordMode() {
-    return ["words", "halloween"].includes($("mode-select").value);
+    return ["phrases", "halloween"].includes($("mode-select").value);
   }
 
   function wordCount(text) {
@@ -313,7 +336,7 @@
     const mode = $("listen-mode-select").value;
     const safeIndex = Math.min(Math.max(0, index), Math.max(0, listenExercise.length - 1));
     const totalLetters = letterCount(listenExercise);
-    if (!["sentences", "halloween-sentences", "words", "halloween"].includes(mode)) {
+    if (!["sentences", "halloween-sentences", "phrases", "halloween"].includes(mode)) {
       return `Letter ${listenLetterNumber(safeIndex)} of ${totalLetters} letters`;
     }
     const throughCurrent = listenExercise.slice(0, safeIndex + 1);
@@ -337,11 +360,26 @@
     } else if (mode === "mixed") {
       const source = LETTERS + NUMBERS;
       exercise = randomSequence(source, group, `${mode}:${group}`);
-    } else if (mode === "words" || mode === "halloween") {
-      const source = mode === "halloween" ? HALLOWEEN_WORDS : WORDS;
-      const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
-      const possible = source.filter((word) => word.length <= lengthAllowance);
-      exercise = drawUnused(source, mode, possible.length ? possible : source);
+    } else if (mode === "phrases") {
+      setStatus("Loading themed phrases…");
+      let pool;
+      try {
+        pool = await loadThemePhrasePool("practice");
+      } catch (error) {
+        if (generation !== exerciseGeneration) return;
+        showToast(error.message);
+      }
+      if (generation !== exerciseGeneration) return;
+      if (pool?.items.length) {
+        const selected = drawThemeUnused(pool.items, pool.key);
+        exercise = selected.text;
+        exerciseThemeId = selected.themeId;
+      } else {
+        exercise = drawUnused(WORDS, mode);
+      }
+    } else if (mode === "halloween") {
+      const possible = HALLOWEEN_WORDS.filter((word) => word.length <= group + 4);
+      exercise = drawUnused(HALLOWEEN_WORDS, mode, possible.length ? possible : HALLOWEEN_WORDS);
     } else if (mode === "sentences") {
       setStatus("Loading themes…");
       let pool;
@@ -390,11 +428,26 @@
       listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
     } else if (mode === "mixed") {
       listenExercise = randomSequence(LETTERS + NUMBERS, group, `listen:${mode}:${group}`);
-    } else if (mode === "words" || mode === "halloween") {
-      const source = mode === "halloween" ? HALLOWEEN_WORDS : WORDS;
-      const lengthAllowance = mode === "halloween" ? group + 4 : group + 2;
-      const possible = source.filter((word) => word.length <= lengthAllowance);
-      listenExercise = drawUnused(source, `listen:${mode}`, possible.length ? possible : source);
+    } else if (mode === "phrases") {
+      setListenStatus("Loading themed phrases…");
+      let pool;
+      try {
+        pool = await loadThemePhrasePool("listen");
+      } catch (error) {
+        if (generation !== listenGeneration) return;
+        showToast(error.message);
+      }
+      if (generation !== listenGeneration) return;
+      if (pool?.items.length) {
+        const selected = drawThemeUnused(pool.items, pool.key);
+        listenExercise = selected.text;
+        listenThemeId = selected.themeId;
+      } else {
+        listenExercise = drawUnused(WORDS, `listen:${mode}`);
+      }
+    } else if (mode === "halloween") {
+      const possible = HALLOWEEN_WORDS.filter((word) => word.length <= group + 4);
+      listenExercise = drawUnused(HALLOWEEN_WORDS, `listen:${mode}`, possible.length ? possible : HALLOWEEN_WORDS);
     } else if (mode === "sentences") {
       setListenStatus("Loading themes…");
       let pool;
@@ -432,13 +485,13 @@
 
   function updateSummary() {
     const mode = $("mode-select").value;
-    const exerciseType = isSentenceMode() ? "Sentence" : `${DEFAULT_EXERCISE_GROUP_SIZE} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
+    const exerciseType = isSentenceMode() ? "Sentence" : isWordMode() ? "Phrase" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateListenSummary() {
     const mode = $("listen-mode-select").value;
-    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : `${DEFAULT_EXERCISE_GROUP_SIZE} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
+    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : ["phrases", "halloween"].includes(mode) ? "Phrase" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("listen-summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
