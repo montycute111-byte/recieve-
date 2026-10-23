@@ -69,6 +69,7 @@
     silenceBefore: 0.7, silenceAfter: 0.7, countdown: true,
     repeatCorrect: false, profileName: "Operator"
   };
+  const DEFAULT_EXERCISE_GROUP_SIZE = 5;
 
   const $ = (id) => document.getElementById(id);
   const exercisePools = new Map();
@@ -395,7 +396,7 @@
   async function generateExercise() {
     const generation = ++exerciseGeneration;
     const mode = $("mode-select").value;
-    const group = Number($("group-select").value);
+    const group = DEFAULT_EXERCISE_GROUP_SIZE;
     exerciseThemeId = "";
     if (mode === "numbers") {
       exercise = randomSequence(NUMBERS, group, `${mode}:${group}`);
@@ -464,7 +465,7 @@
   async function generateListenExercise() {
     const generation = ++listenGeneration;
     const mode = $("listen-mode-select").value;
-    const group = Number($("listen-group-select").value);
+    const group = DEFAULT_EXERCISE_GROUP_SIZE;
     listenThemeId = "";
     if (mode === "numbers") {
       listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
@@ -527,13 +528,13 @@
 
   function updateSummary() {
     const mode = $("mode-select").value;
-    const exerciseType = isSentenceMode() ? "Sentence" : `${$("group-select").value} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
+    const exerciseType = isSentenceMode() ? "Sentence" : `${DEFAULT_EXERCISE_GROUP_SIZE} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateListenSummary() {
     const mode = $("listen-mode-select").value;
-    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : `${$("listen-group-select").value} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
+    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : `${DEFAULT_EXERCISE_GROUP_SIZE} ${["words", "halloween"].includes(mode) ? "word" : "char"}`;
     $("listen-summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
@@ -1144,7 +1145,6 @@
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
     $("mode-select").addEventListener("change", () => { renderThemeSelectors(); generateExercise(); });
-    $("group-select").addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
     $("start-button").addEventListener("click", startTransmission);
     $("replay-button").addEventListener("click", () => { stopTransmission(); playFrom(0); });
@@ -1152,7 +1152,6 @@
     $("pause-button").addEventListener("click", togglePause);
     $("stop-button").addEventListener("click", stopTransmission);
     $("listen-mode-select").addEventListener("change", () => { renderThemeSelectors(); changeListenExercise(); });
-    $("listen-group-select").addEventListener("change", () => changeListenExercise());
     $("listen-session-select").addEventListener("change", () => showToast($("listen-session-select").value === "0" ? "Unlimited session selected" : `${$("listen-session-select").value}-minute session selected`));
     $("listen-start-button").addEventListener("click", startListenTransmission);
     $("listen-replay-button").addEventListener("click", () => { stopListenTransmission(true); playListenFrom(0); });
