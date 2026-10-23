@@ -333,6 +333,8 @@
       return;
     }
     if (activeExercise.revealed || activeExercise.rewarded) return;
+    const exerciseMode = String(detail.mode || activeExercise.mode || "letters");
+    activeExercise.mode = exerciseMode;
     ensureDaily();
     const expected = String(detail.expected || "");
     const actual = String(detail.actual || "");
@@ -342,7 +344,7 @@
     state.totalAccuracyCharacters += maxLength;
     if (accuracy !== 100 || expected !== actual) {
       state.perfectStreak = 0;
-      if (isSentenceMode(activeExercise.mode)) state.sentencePerfectStreak = 0;
+      if (isSentenceMode(exerciseMode)) state.sentencePerfectStreak = 0;
       saveState();
       renderAll();
       return;
@@ -356,16 +358,16 @@
     let xp = 0;
     let label = "PERFECT COPY!";
 
-    if (isWordMode(activeExercise.mode)) {
+    if (isWordMode(exerciseMode)) {
       state.totalWords += 1;
       xp += 10;
       state.daily.progress.words += 1;
-      if (activeExercise.mode === "halloween") {
+      if (exerciseMode === "halloween") {
         state.halloweenWords += 1;
         state.daily.progress.halloweenWords += 1;
       }
     }
-    if (isSentenceMode(activeExercise.mode)) {
+    if (isSentenceMode(exerciseMode)) {
       state.totalSentences += 1;
       state.daily.progress.sentences += 1;
       state.perfectSentences += 1;
@@ -377,7 +379,7 @@
         state.daily.progress.noRewindSentences += 1;
         state.daily.progress.perfectSentences += 1;
       }
-      if (activeExercise.mode === "halloween-sentences") {
+      if (exerciseMode === "halloween-sentences") {
         state.daily.progress.halloweenSentences += 1;
         if (!activeExercise.rewinds) state.daily.progress.halloweenPerfectSentences += 1;
       }
@@ -386,7 +388,7 @@
     if (!activeExercise.rewinds) xp += 25;
     if (!activeExercise.pauses) xp += 15;
     if (state.perfectStreak % 5 === 0) xp += state.perfectStreak % 10 === 0 ? 200 : 100;
-    if (effectiveWpm() >= 10) state.perfectAt10 += 1;
+    if (Number(window.morseSettings?.effectiveWpm || 0) >= 10) state.perfectAt10 += 1;
     state.daily.progress.characters += expected.replace(/\s/g, "").length;
     updateDailyQuests();
     checkAchievements();
