@@ -58,7 +58,8 @@
     { id: "famous-quotes", icon: "💬", name: "Famous Quotes" },
     { id: "jokes-riddles", icon: "😂", name: "Jokes & Riddles" },
     { id: "music", icon: "🎵", name: "Music" },
-    { id: "general-sentences", icon: "📝", name: "General Sentences" }
+    { id: "general-sentences", icon: "📝", name: "General Sentences" },
+    { id: "halloween", icon: "🎃", name: "Halloween" }
   ];
   const THEME_IDS = THEME_META.map((theme) => theme.id);
   const STORAGE_KEY = "morseReceiveSettings";

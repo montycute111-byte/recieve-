@@ -20,7 +20,8 @@
     { id: "famous-quotes", icon: "💬", name: "Famous Quotes" },
     { id: "jokes-riddles", icon: "😂", name: "Jokes & Riddles" },
     { id: "music", icon: "🎵", name: "Music" },
-    { id: "general-sentences", icon: "📝", name: "General Sentences" }
+    { id: "general-sentences", icon: "📝", name: "General Sentences" },
+    { id: "halloween", icon: "🎃", name: "Halloween" }
   ];
   const STANDARD_QUESTS = [
     { id: "warm-up", title: "Warm-Up", description: "Decode 10 words correctly.", target: 10, reward: 25, metric: "words", group: "standard" },
