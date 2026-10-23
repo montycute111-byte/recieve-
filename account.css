@@ -1,0 +1,41 @@
+.account-panel {
+  display: grid;
+  gap: 8px;
+  margin: 28px 10px 0;
+  padding: 14px 0;
+  border-top: 1px solid #28363c;
+}
+
+.account-panel .eyebrow {
+  color: #8da0a5;
+}
+
+.account-button {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid #356168;
+  border-radius: 10px;
+  background: #1c2a32;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.account-button:hover {
+  border-color: #7dd2c8;
+  background: #23454a;
+}
+
+.account-panel small {
+  color: #8da0a5;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+@media (max-width: 620px) {
+  .account-panel {
+    display: none;
+  }
+}
