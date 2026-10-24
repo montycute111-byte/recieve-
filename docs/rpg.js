@@ -81,9 +81,6 @@
 
   const $ = (id) => document.getElementById(id);
   const state = loadState();
-  let cloudUser = null;
-  let cloudSyncEnabled = false;
-  let cloudSaveTimer = 0;
   let activeExercise = { mode: "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false };
   let toastTimer = 0;
 
@@ -105,71 +102,6 @@
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    scheduleCloudSave();
-  }
-
-  function scheduleCloudSave() {
-    if (!cloudSyncEnabled || !cloudUser || !window.morseFirebase) return;
-    window.clearTimeout(cloudSaveTimer);
-    cloudSaveTimer = window.setTimeout(async () => {
-      try {
-        await window.morseFirebase.saveProgress(state);
-      } catch (_) {
-        showRpgToast("Cloud save unavailable; local progress is safe.");
-      }
-    }, 700);
-  }
-
-  function replaceState(nextState) {
-    const fresh = defaultState();
-    const normalized = {
-      ...fresh,
-      ...(nextState || {}),
-      daily: { ...fresh.daily, ...((nextState || {}).daily || {}), progress: { ...fresh.daily.progress, ...(((nextState || {}).daily || {}).progress || {}) } }
-    };
-    Object.keys(state).forEach((key) => delete state[key]);
-    Object.assign(state, normalized);
-  }
-
-  function renderAccount() {
-    const button = $("account-button");
-    const status = $("account-status");
-    if (!button || !status) return;
-    button.textContent = cloudUser ? "Sign out" : "Sign in with Google";
-    status.textContent = cloudUser ? (cloudUser.email || cloudUser.displayName || "Cloud progress enabled") : "Progress saved on this device";
-  }
-
-  async function syncCloudAccount(user) {
-    cloudUser = user;
-    cloudSyncEnabled = false;
-    renderAccount();
-    if (!user || !window.morseFirebase) return;
-    try {
-      const remoteState = await window.morseFirebase.loadProgress();
-      if (remoteState) replaceState(remoteState);
-      cloudSyncEnabled = true;
-      saveState();
-      renderAll();
-      showRpgToast(remoteState ? "Cloud progress restored." : "Cloud saving enabled.");
-    } catch (_) {
-      cloudUser = null;
-      renderAccount();
-      showRpgToast("Finish enabling Firestore to save progress online.");
-    }
-  }
-
-  async function handleAccountClick() {
-    if (!window.morseFirebase) {
-      showRpgToast("Connecting to account services…");
-      return;
-    }
-    try {
-      if (cloudUser) await window.morseFirebase.signOut();
-      else await window.morseFirebase.signInWithGoogle();
-    } catch (error) {
-      const message = error?.code === "auth/popup-closed-by-user" ? "Sign-in was cancelled." : "Sign-in needs Google enabled in Firebase.";
-      showRpgToast(message);
-    }
   }
 
   function todayKey(date = new Date()) {
@@ -540,7 +472,6 @@
   }
 
   function renderAll() {
-    renderAccount();
     renderProgression();
     renderStats();
     renderDaily();
@@ -548,8 +479,6 @@
   }
 
   function bindEvents() {
-    $("account-button")?.addEventListener("click", handleAccountClick);
-    window.addEventListener("morse:auth-state", (event) => syncCloudAccount(event.detail.user));
     window.addEventListener("morse:exercise-start", (event) => {
       activeExercise = { mode: event.detail.mode || "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false };
     });
