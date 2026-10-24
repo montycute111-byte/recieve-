@@ -1,91 +1,18 @@
-.rpg-dashboard,
 .rpg-section {
   border-color: var(--line);
   background: var(--panel);
 }
 
-.rpg-dashboard {
-  padding: 22px;
-  margin-bottom: 18px;
-}
-
-.rpg-dashboard-heading,
-.section-heading,
-.rpg-level-row,
-.xp-label-row {
+.section-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.rpg-dashboard-heading h2,
 .section-heading h2 {
   margin: 0.15rem 0 0.25rem;
 }
-
-.rank-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  padding: 0.55rem 0.85rem;
-  border: 1px solid #e8c984;
-  border-radius: 999px;
-  color: #8b661d;
-  background: #fffaf0;
-  font-weight: 750;
-  white-space: nowrap;
-}
-
-.rank-chip span:first-child {
-  color: var(--warm);
-  font-size: 1.2rem;
-}
-
-.rpg-level-row {
-  justify-content: flex-start;
-  margin-top: 1.35rem;
-}
-
-.level-orb {
-  width: 74px;
-  height: 74px;
-  display: grid;
-  place-content: center;
-  text-align: center;
-  border: 2px solid var(--warm);
-  border-radius: 50%;
-  background: #fffaf0;
-  box-shadow: 0 8px 22px #e7b96825;
-  flex: 0 0 auto;
-}
-
-.level-orb span {
-  color: var(--muted);
-  font-size: 0.58rem;
-  letter-spacing: 0.12em;
-}
-
-.level-orb strong {
-  color: #8b661d;
-  font-size: 1.65rem;
-  line-height: 1;
-}
-
-.xp-panel {
-  min-width: 0;
-  flex: 1;
-}
-
-.xp-label-row {
-  font-size: 0.85rem;
-}
-
-.xp-label-row strong {
-  color: var(--accent-dark);
-}
-
-.xp-track,
 .challenge-progress {
   height: 0.58rem;
   overflow: hidden;
@@ -93,11 +20,6 @@
   background: #edf1f1;
 }
 
-.xp-track {
-  margin: 0.55rem 0 0.35rem;
-}
-
-.xp-track div,
 .challenge-progress i {
   display: block;
   height: 100%;
@@ -309,7 +231,7 @@
   animation: rpg-pop 420ms ease both;
 }
 
-.rpg-toast.xp-reward {
+.rpg-toast.accuracy-reward {
   display: grid;
   gap: 0.18rem;
   min-width: min(250px, 82vw);
@@ -323,78 +245,34 @@
   transform: translate(-50%, 1rem) scale(0.92);
 }
 
-.rpg-toast.xp-reward.show {
-  animation: xp-reward-pop 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+.rpg-toast.accuracy-reward.show {
+  animation: accuracy-reward-pop 560ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.rpg-toast.level-up {
-  display: grid;
-  gap: 0.18rem;
-  min-width: min(280px, 84vw);
-  padding: 1rem 1.35rem 1.1rem;
-  border-color: #e2bb63;
-  border-radius: 1.2rem;
-  color: #765313;
-  background: linear-gradient(145deg, #fffef7 0%, #fff6d9 100%);
-  box-shadow: 0 18px 48px #9a731d33, 0 0 0 6px #f3d98a4d;
-  text-align: center;
-  transform: translate(-50%, 1rem) scale(0.9);
-}
-
-.rpg-toast.level-up.show {
-  animation: level-up-pop 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-.level-toast-kicker {
-  color: #a27618;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.16em;
-}
-
-.level-toast-number {
-  color: #8b661d;
-  font-size: 1.75rem;
-  line-height: 1.05;
-}
-
-.level-toast-rank {
-  color: #6e7b67;
-  font-size: 0.88rem;
-  font-weight: 800;
-}
-
-.xp-toast-kicker {
+.accuracy-toast-kicker {
   color: #8b661d;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.14em;
 }
 
-.xp-toast-amount {
+.accuracy-toast-amount {
   color: #177e72;
   font-size: 1.6rem;
   line-height: 1.1;
 }
 
-.xp-toast-label {
+.accuracy-toast-label {
   color: #59716e;
   font-size: 0.78rem;
   font-weight: 700;
 }
 
-@keyframes xp-reward-pop {
+@keyframes accuracy-reward-pop {
   0% { opacity: 0; transform: translate(-50%, 1rem) scale(0.86); }
   55% { opacity: 1; transform: translate(-50%, 0) scale(1.06); }
   78% { transform: translate(-50%, 0) scale(0.98); }
   100% { opacity: 1; transform: translate(-50%, 0) scale(1); }
-}
-
-@keyframes level-up-pop {
-  0% { opacity: 0; transform: translate(-50%, 1rem) scale(0.78) rotate(-2deg); }
-  45% { opacity: 1; transform: translate(-50%, 0) scale(1.1) rotate(1deg); }
-  70% { transform: translate(-50%, 0) scale(0.97) rotate(0); }
-  100% { opacity: 1; transform: translate(-50%, 0) scale(1) rotate(0); }
 }
 
 @keyframes rpg-pop {
@@ -410,12 +288,6 @@
 }
 
 @media (max-width: 620px) {
-  .rpg-dashboard-heading,
-  .rpg-level-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .rpg-two-column {
     grid-template-columns: 1fr;
   }
@@ -424,14 +296,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .xp-panel {
-    width: 100%;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rpg-toast.xp-reward.show,
-  .rpg-toast.level-up.show,
+  .rpg-toast.accuracy-reward.show,
   .rpg-toast.prominent {
     animation: none;
   }

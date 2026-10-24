@@ -2,18 +2,6 @@
   "use strict";
 
   const STORAGE_KEY = "morseReceiveRpgProgress";
-  const RANKS = [
-    { level: 1, name: "Signal Novice", icon: "◈" },
-    { level: 3, name: "Signal Apprentice", icon: "◇" },
-    { level: 6, name: "Code Operator", icon: "◆" },
-    { level: 10, name: "Radio Specialist", icon: "✦" },
-    { level: 15, name: "Morse Expert", icon: "✧" },
-    { level: 21, name: "Master Operator", icon: "✪" },
-    { level: 28, name: "Elite Operator", icon: "★" },
-    { level: 36, name: "Morse Legend", icon: "♛" },
-    { level: 45, name: "Grandmaster", icon: "♕" },
-    { level: 55, name: "Morse Champion", icon: "☼" }
-  ];
   const THEME_META = [
     { id: "video-games", icon: "🎮", name: "Video Games" },
     { id: "movies-tv", icon: "🎬", name: "Movies & TV" },
@@ -24,21 +12,21 @@
     { id: "halloween", icon: "🎃", name: "Halloween" }
   ];
   const STANDARD_QUESTS = [
-    { id: "warm-up", title: "Warm-Up", description: "Decode 10 words correctly.", target: 10, reward: 25, metric: "words", group: "standard" },
-    { id: "sentence-starter", title: "Sentence Starter", description: "Decode 10 sentences correctly.", target: 10, reward: 50, metric: "sentences", group: "standard" },
-    { id: "steady-signal", title: "Steady Signal", description: "Decode 30 characters correctly.", target: 30, reward: 35, metric: "characters", group: "standard" },
-    { id: "time-on-air", title: "Time on the Air", description: "Practice for 10 minutes.", target: 10, reward: 45, metric: "practiceMinutes", group: "standard" },
-    { id: "signal-check", title: "Signal Check", description: "Decode 5 words correctly.", target: 5, reward: 20, metric: "words", group: "standard" }
+    { id: "warm-up", title: "Warm-Up", description: "Decode 10 words correctly.", target: 10, metric: "words", group: "standard" },
+    { id: "sentence-starter", title: "Sentence Starter", description: "Decode 10 sentences correctly.", target: 10, metric: "sentences", group: "standard" },
+    { id: "steady-signal", title: "Steady Signal", description: "Decode 30 characters correctly.", target: 30, metric: "characters", group: "standard" },
+    { id: "time-on-air", title: "Time on the Air", description: "Practice for 10 minutes.", target: 10, metric: "practiceMinutes", group: "standard" },
+    { id: "signal-check", title: "Signal Check", description: "Decode 5 words correctly.", target: 5, metric: "words", group: "standard" }
   ];
   const BONUS_QUESTS = [
-    { id: "cw-marathon", title: "CW Marathon", description: "Decode 250 characters correctly.", target: 250, reward: 200, metric: "characters", group: "bonus" },
-    { id: "sentence-marathon", title: "Sentence Marathon", description: "Decode 25 sentences correctly.", target: 25, reward: 180, metric: "sentences", group: "bonus" },
-    { id: "deep-reception", title: "Deep Reception", description: "Practice for 25 minutes.", target: 25, reward: 225, metric: "practiceMinutes", group: "bonus" }
+    { id: "cw-marathon", title: "CW Marathon", description: "Decode 250 characters correctly.", target: 250, metric: "characters", group: "bonus" },
+    { id: "sentence-marathon", title: "Sentence Marathon", description: "Decode 25 sentences correctly.", target: 25, metric: "sentences", group: "bonus" },
+    { id: "deep-reception", title: "Deep Reception", description: "Practice for 25 minutes.", target: 25, metric: "practiceMinutes", group: "bonus" }
   ];
   const SEASONAL_QUESTS = [
-    { id: "halloween-25", title: "Haunted Warm-Up", description: "Decode 25 Halloween words correctly.", target: 25, reward: 75, metric: "halloweenWords", group: "bonus", season: "halloween" },
-    { id: "halloween-100", title: "Halloween Marathon", description: "Decode 100 Halloween-themed words.", target: 100, reward: 150, metric: "halloweenWords", group: "bonus", season: "halloween" },
-    { id: "halloween-sentences", title: "Spooky Story", description: "Complete 10 Halloween sentences.", target: 10, reward: 125, metric: "halloweenSentences", group: "bonus", season: "halloween" },
+    { id: "halloween-25", title: "Haunted Warm-Up", description: "Decode 25 Halloween words correctly.", target: 25, metric: "halloweenWords", group: "bonus", season: "halloween" },
+    { id: "halloween-100", title: "Halloween Marathon", description: "Decode 100 Halloween-themed words.", target: 100, metric: "halloweenWords", group: "bonus", season: "halloween" },
+    { id: "halloween-sentences", title: "Spooky Story", description: "Complete 10 Halloween sentences.", target: 10, metric: "halloweenSentences", group: "bonus", season: "halloween" },
   ];
   const QUESTS = [...STANDARD_QUESTS, ...BONUS_QUESTS, ...SEASONAL_QUESTS];
   const REMOVED_QUEST_IDS = new Set(["perfect-copy", "clean-circuit", "perfect-run", "halloween-perfect"]);
@@ -55,7 +43,6 @@
   ];
 
   const defaultState = () => ({
-    totalXP: 0,
     perfectStreak: 0,
     longestPerfectStreak: 0,
     sentencePerfectStreak: 0,
@@ -214,28 +201,6 @@
     }
   }
 
-  function xpForNextLevel(level) {
-    return 100 + ((level - 1) * 50) + ((level - 1) ** 2 * 10);
-  }
-
-  function levelData(totalXP) {
-    let level = 1;
-    let remaining = Math.max(0, Number(totalXP) || 0);
-    let required = xpForNextLevel(level);
-    let guard = 0;
-    while (remaining >= required && guard < 10000) {
-      remaining -= required;
-      level += 1;
-      required = xpForNextLevel(level);
-      guard += 1;
-    }
-    return { level, current: remaining, required };
-  }
-
-  function rankForLevel(level) {
-    return [...RANKS].reverse().find((rank) => level >= rank.level) || RANKS[0];
-  }
-
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[character]));
   }
@@ -258,7 +223,7 @@
   function showRpgToast(message, prominent = false) {
     const toast = $("rpg-toast");
     if (!toast) return;
-    toast.classList.remove("xp-reward", "level-up");
+    toast.classList.remove("accuracy-reward");
     toast.textContent = message;
     toast.classList.toggle("prominent", prominent);
     toast.classList.add("show");
@@ -266,40 +231,15 @@
     toastTimer = window.setTimeout(() => toast.classList.remove("show"), prominent ? 3400 : 2600);
   }
 
-  function showXpToast(amount, label, levelUp = false) {
+  function showAccuracyToast() {
     const toast = $("rpg-toast");
     if (!toast) return;
-    toast.classList.remove("prominent", "level-up", "show");
-    toast.classList.add("xp-reward");
-    toast.innerHTML = `<span class="xp-toast-kicker">✦ XP EARNED</span><strong class="xp-toast-amount">+${amount} XP</strong><span class="xp-toast-label">${escapeHtml(label)}</span>`;
+    toast.classList.remove("prominent", "accuracy-reward", "show");
+    toast.classList.add("accuracy-reward");
+    toast.innerHTML = `<span class="accuracy-toast-kicker">✦ PERFECT COPY ✦</span><strong class="accuracy-toast-amount">100% ACCURACY</strong><span class="accuracy-toast-label">Clean transmission</span>`;
     window.clearTimeout(toastTimer);
     window.requestAnimationFrame(() => toast.classList.add("show"));
-    toastTimer = window.setTimeout(() => toast.classList.remove("show"), levelUp ? 4300 : 3400);
-  }
-
-  function showLevelUpToast(level, rank) {
-    const toast = $("rpg-toast");
-    if (!toast) return;
-    toast.classList.remove("prominent", "xp-reward", "show");
-    toast.classList.add("level-up");
-    toast.innerHTML = `<span class="level-toast-kicker">✦ LEVEL UP ✦</span><strong class="level-toast-number">LEVEL ${level}</strong><span class="level-toast-rank">${escapeHtml(rank.icon)} ${escapeHtml(rank.name)}</span>`;
-    window.clearTimeout(toastTimer);
-    window.requestAnimationFrame(() => toast.classList.add("show"));
-    toastTimer = window.setTimeout(() => toast.classList.remove("show"), 4600);
-  }
-
-  function grantXp(amount, label) {
-    if (!amount) return;
-    const before = levelData(state.totalXP).level;
-    state.totalXP += amount;
-    const afterData = levelData(state.totalXP);
-    saveState();
-    renderProgression();
-    showXpToast(amount, label, afterData.level > before);
-    if (afterData.level > before) {
-      const rank = rankForLevel(afterData.level);
-      window.setTimeout(() => showLevelUpToast(afterData.level, rank), 2500);
-    }
+    toastTimer = window.setTimeout(() => toast.classList.remove("show"), 3400);
   }
 
   function recordPracticeTime(detail = {}) {
@@ -325,7 +265,6 @@
         state.daily.completed.push(quest.id);
         state.totalQuestsCompleted += 1;
         if (quest.season) state.halloweenQuestsCompleted += 1;
-        grantXp(quest.reward, `QUEST COMPLETE! ${quest.title}`);
         checkAchievements();
       }
     });
@@ -380,12 +319,8 @@
     }
     state.perfectStreak += 1;
     state.longestPerfectStreak = Math.max(state.longestPerfectStreak, state.perfectStreak);
-    let xp = 0;
-    let label = "PERFECT COPY!";
-
     if (isWordMode(exerciseMode)) {
       state.totalWords += 1;
-      xp += 10;
       state.daily.progress.words += 1;
       if (exerciseMode === "halloween") {
         state.halloweenWords += 1;
@@ -398,7 +333,6 @@
       state.perfectSentences += 1;
       state.sentencePerfectStreak += 1;
       state.bestSentencePerfectStreak = Math.max(state.bestSentencePerfectStreak, state.sentencePerfectStreak);
-      xp += 50;
       if (!activeExercise.rewinds) {
         state.sentencesNoRewind += 1;
         state.daily.progress.noRewindSentences += 1;
@@ -408,39 +342,20 @@
         state.daily.progress.halloweenSentences += 1;
         if (!activeExercise.rewinds) state.daily.progress.halloweenPerfectSentences += 1;
       }
-      label = "FLAWLESS TRANSMISSION!";
     }
-    if (!activeExercise.rewinds) xp += 25;
-    if (!activeExercise.pauses) xp += 15;
-    if (state.perfectStreak % 5 === 0) xp += state.perfectStreak % 10 === 0 ? 200 : 100;
     if (Number(window.morseSettings?.effectiveWpm || 0) >= 10) state.perfectAt10 += 1;
     state.daily.progress.characters += expected.replace(/\s/g, "").length;
     updateDailyQuests();
     checkAchievements();
     saveState();
-    grantXp(xp, label);
+    showAccuracyToast();
     renderAll();
   }
 
-  function renderProgression() {
-    const data = levelData(state.totalXP);
-    const rank = rankForLevel(data.level);
-    if ($("rpg-level")) $("rpg-level").textContent = data.level;
-    if ($("rpg-rank")) $("rpg-rank").textContent = rank.name;
-    if ($("rpg-rank-icon")) $("rpg-rank-icon").textContent = rank.icon;
-    if ($("progress-rank-label")) $("progress-rank-label").textContent = rank.name;
-    if ($("rpg-xp-label")) $("rpg-xp-label").textContent = `${data.current} / ${data.required} XP`;
-    if ($("rpg-next-level")) $("rpg-next-level").textContent = `${data.required - data.current} XP to next level`;
-    if ($("rpg-xp-fill")) $("rpg-xp-fill").style.width = `${Math.min(100, (data.current / data.required) * 100)}%`;
-    if ($("rpg-xp-message")) $("rpg-xp-message").textContent = `${rank.name} · ${state.perfectStreak} perfect answer${state.perfectStreak === 1 ? "" : "s"} in a row`;
-  }
-
   function renderStats() {
-    const data = levelData(state.totalXP);
-    const rank = rankForLevel(data.level);
     const accuracy = state.totalAccuracyCharacters ? Math.round(state.totalAccuracyPoints / state.totalAccuracyCharacters) : 0;
     const stats = [
-      ["Total XP", state.totalXP], ["Level", data.level], ["Rank", rank.name], ["Overall accuracy", `${accuracy}%`],
+      ["Overall accuracy", `${accuracy}%`],
       ["Words decoded", state.totalWords], ["Sentences decoded", state.totalSentences], ["Characters decoded", state.totalCharacters],
       ["Perfect streak", state.perfectStreak], ["Longest streak", state.longestPerfectStreak], ["Rewinds", state.totalRewinds],
       ["Practice time", formatDuration(state.totalPracticeMs)],
@@ -481,7 +396,7 @@
     const raw = Number(state.daily.progress[quest.metric] || 0);
     const progress = Math.min(quest.target, raw);
     const complete = state.daily.completed.includes(quest.id);
-    return `<article class="challenge-card quest-card${complete ? " complete" : ""}"><div class="challenge-icon">${complete ? "✓" : quest.season ? "☾" : "◇"}</div><div class="challenge-copy"><div class="quest-title-row"><strong>${escapeHtml(quest.title)}</strong><b>+${quest.reward} XP</b></div><span>${escapeHtml(quest.description)}</span><div class="challenge-progress"><i style="width:${(progress / quest.target) * 100}%"></i></div><small>${progress} / ${quest.target}${complete ? " · Complete" : ""}</small></div></article>`;
+    return `<article class="challenge-card quest-card${complete ? " complete" : ""}"><div class="challenge-icon">${complete ? "✓" : quest.season ? "☾" : "◇"}</div><div class="challenge-copy"><div class="quest-title-row"><strong>${escapeHtml(quest.title)}</strong></div><span>${escapeHtml(quest.description)}</span><div class="challenge-progress"><i style="width:${(progress / quest.target) * 100}%"></i></div><small>${progress} / ${quest.target}${complete ? " · Complete" : ""}</small></div></article>`;
   }
 
   function renderDaily() {
@@ -507,7 +422,6 @@
   }
 
   function renderAll() {
-    renderProgression();
     renderStats();
     renderThemeProgress();
     renderDaily();
