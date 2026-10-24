@@ -29,19 +29,9 @@
   transition: width 500ms ease;
 }
 
-.rpg-two-column {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 1rem;
-}
-
 .rpg-section {
   padding: 20px;
   margin-top: 1rem;
-}
-
-.rpg-two-column .rpg-section {
-  margin-top: 0;
 }
 
 .section-heading {
@@ -83,15 +73,13 @@
   text-transform: uppercase;
 }
 
-.challenge-list,
-.achievement-grid {
+.challenge-list {
   display: grid;
   gap: 0.7rem;
   margin-top: 1rem;
 }
 
-.challenge-card,
-.achievement-card {
+.challenge-card {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
@@ -101,14 +89,12 @@
   background: #fbfcfc;
 }
 
-.challenge-card.complete,
-.achievement-card.unlocked {
+.challenge-card.complete {
   border-color: #9bd4cb;
   background: #f0faf8;
 }
 
-.challenge-icon,
-.achievement-icon {
+.challenge-icon {
   display: grid;
   place-items: center;
   width: 2rem;
@@ -120,20 +106,17 @@
   font-size: 1.1rem;
 }
 
-.challenge-card.complete .challenge-icon,
-.achievement-card.unlocked .achievement-icon {
+.challenge-card.complete .challenge-icon {
   color: var(--accent-dark);
   background: #e1f4f0;
 }
 
-.challenge-copy,
-.achievement-copy {
+.challenge-copy {
   min-width: 0;
   flex: 1;
 }
 
-.challenge-copy strong,
-.achievement-copy strong {
+.challenge-copy strong {
   display: block;
   color: var(--ink);
 }
@@ -151,54 +134,18 @@
   font-size: 0.72rem;
 }
 
-.challenge-copy span,
-.achievement-copy span {
+.challenge-copy span {
   display: block;
   margin: 0.18rem 0 0.55rem;
   color: var(--muted);
   font-size: 0.82rem;
 }
 
-.challenge-copy small,
-.achievement-copy small {
+.challenge-copy small {
   display: block;
   margin-top: 0.35rem;
   color: var(--muted);
   font-size: 0.72rem;
-}
-
-.rpg-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
-  margin-top: 1rem;
-}
-
-.rpg-stat-tile {
-  min-width: 0;
-  padding: 0.75rem;
-  border: 1px solid #edf0f0;
-  border-radius: 0.7rem;
-  background: #fbfcfc;
-}
-
-.rpg-stat-tile span,
-.rpg-stat-tile strong {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rpg-stat-tile span {
-  color: var(--muted);
-  font-size: 0.7rem;
-}
-
-.rpg-stat-tile strong {
-  margin-top: 0.25rem;
-  color: var(--accent-dark);
-  font-size: 1rem;
 }
 
 .rpg-toast {
@@ -282,20 +229,9 @@
 }
 
 @media (max-width: 850px) {
-  .rpg-two-column {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 620px) {
-  .rpg-two-column {
-    grid-template-columns: 1fr;
-  }
-
-  .rpg-stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
 }
 
 @media (prefers-reduced-motion: reduce) {

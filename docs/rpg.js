@@ -21,17 +21,6 @@
   ];
   const QUESTS = [...STANDARD_QUESTS, ...BONUS_QUESTS, ...SEASONAL_QUESTS];
   const REMOVED_QUEST_IDS = new Set(["perfect-copy", "clean-circuit", "perfect-run", "halloween-perfect"]);
-  const REMOVED_ACHIEVEMENT_IDS = new Set(["unstoppable", "perfect-signal", "perfect-reception"]);
-  const ACHIEVEMENTS = [
-    { id: "first-quest", icon: "◇", title: "First Transmission", description: "Complete your first daily quest.", target: 1, getProgress: (s) => s.totalQuestsCompleted },
-    { id: "flawless", icon: "✦", title: "Flawless Victory", description: "Complete a sentence with 100% accuracy.", target: 1, getProgress: (s) => s.perfectSentences },
-    { id: "five-day-streak", icon: "▣", title: "Five-Day Streak", description: "Maintain a five-day daily practice streak.", target: 5, getProgress: (s) => s.daily.longestStreak },
-    { id: "night-owl", icon: "☾", title: "Night Owl", description: "Successfully decode 100 Halloween-themed words.", target: 100, getProgress: (s) => s.halloweenWords },
-    { id: "speed-demon", icon: "➤", title: "Speed Demon", description: "Achieve 100% accuracy at 10 WPM.", target: 1, getProgress: (s) => s.perfectAt10 },
-    { id: "halloween-hero", icon: "☠", title: "Halloween Hero", description: "Complete 10 Halloween quests.", target: 10, getProgress: (s) => s.halloweenQuestsCompleted },
-    { id: "morse-master", icon: "♛", title: "Morse Master", description: "Complete 1,000 practice exercises.", target: 1000, getProgress: (s) => s.successfulExercises },
-    { id: "cw-champion", icon: "★", title: "CW Champion", description: "Complete 100 daily quests.", target: 100, getProgress: (s) => s.totalQuestsCompleted }
-  ];
 
   const defaultState = () => ({
     perfectStreak: 0,
@@ -52,7 +41,6 @@
     perfectAt10: 0,
     totalQuestsCompleted: 0,
     halloweenQuestsCompleted: 0,
-    unlockedAchievements: [],
     daily: {
       date: "",
       questIds: [],
@@ -79,7 +67,6 @@
       return {
         ...fresh,
         ...saved,
-        unlockedAchievements: Array.isArray(saved.unlockedAchievements) ? saved.unlockedAchievements.filter((id) => !REMOVED_ACHIEVEMENT_IDS.has(id)) : [],
         daily: { ...fresh.daily, ...(saved.daily || {}), questIds: Array.isArray((saved.daily || {}).questIds) ? saved.daily.questIds : [], progress: { ...fresh.daily.progress, ...((saved.daily || {}).progress || {}) }, completed: Array.isArray((saved.daily || {}).completed) ? saved.daily.completed : [] }
       };
     } catch (_) {
@@ -234,7 +221,6 @@
       state.daily.progress.practiceMinutes = Math.floor(state.daily.progress.practiceMs / 60000);
       updateDailyQuests();
     }
-    renderStats();
     renderDaily();
   }
 
@@ -246,24 +232,11 @@
         state.daily.completed.push(quest.id);
         state.totalQuestsCompleted += 1;
         if (quest.season) state.halloweenQuestsCompleted += 1;
-        checkAchievements();
       }
     });
     if (state.daily.completed.length >= 3) qualifyToday();
     saveState();
     renderDaily();
-    renderStats();
-    renderAchievements();
-  }
-
-  function checkAchievements() {
-    ACHIEVEMENTS.forEach((achievement) => {
-      const progress = achievement.getProgress(state);
-      if (progress >= achievement.target && !state.unlockedAchievements.includes(achievement.id)) {
-        state.unlockedAchievements.push(achievement.id);
-        showRpgToast(`ACHIEVEMENT UNLOCKED! ${achievement.title}`, true);
-      }
-    });
   }
 
   function handleScore(detail) {
@@ -321,23 +294,9 @@
     if (Number(window.morseSettings?.effectiveWpm || 0) >= 10) state.perfectAt10 += 1;
     state.daily.progress.characters += expected.replace(/\s/g, "").length;
     updateDailyQuests();
-    checkAchievements();
     saveState();
     showAccuracyToast();
     renderAll();
-  }
-
-  function renderStats() {
-    const accuracy = state.totalAccuracyCharacters ? Math.round(state.totalAccuracyPoints / state.totalAccuracyCharacters) : 0;
-    const stats = [
-      ["Overall accuracy", `${accuracy}%`],
-      ["Words decoded", state.totalWords], ["Sentences decoded", state.totalSentences], ["Characters decoded", state.totalCharacters],
-      ["Perfect streak", state.perfectStreak], ["Longest streak", state.longestPerfectStreak], ["Rewinds", state.totalRewinds],
-      ["Practice time", formatDuration(state.totalPracticeMs)],
-      ["Daily streak", state.daily.currentStreak], ["Longest daily streak", state.daily.longestStreak], ["Successful days", state.daily.successfulDays],
-      ["Quests completed", state.totalQuestsCompleted], ["Achievements", `${state.unlockedAchievements.length}/${ACHIEVEMENTS.length}`]
-    ];
-    if ($("rpg-stat-grid")) $("rpg-stat-grid").innerHTML = stats.map(([label, value]) => `<div class="rpg-stat-tile"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("");
   }
 
   function resetCountdownText() {
@@ -376,20 +335,8 @@
     if ($("daily-quests-bonus")) $("daily-quests-bonus").innerHTML = quests.filter((quest) => quest.group === "bonus").map(renderQuest).join("");
   }
 
-  function renderAchievements() {
-    if ($("achievement-count")) $("achievement-count").textContent = `${state.unlockedAchievements.length}/${ACHIEVEMENTS.length} unlocked`;
-    if (!$('achievement-grid')) return;
-    $("achievement-grid").innerHTML = ACHIEVEMENTS.map((achievement) => {
-      const progress = Math.min(achievement.target, achievement.getProgress(state));
-      const unlocked = state.unlockedAchievements.includes(achievement.id);
-      return `<article class="achievement-card${unlocked ? " unlocked" : ""}"><div class="achievement-icon">${achievement.icon}</div><div class="achievement-copy"><strong>${escapeHtml(achievement.title)}</strong><span>${escapeHtml(achievement.description)}</span><div class="challenge-progress"><i style="width:${(progress / achievement.target) * 100}%"></i></div><small>${progress} / ${achievement.target}${unlocked ? " · Unlocked" : ""}</small></div></article>`;
-    }).join("");
-  }
-
   function renderAll() {
-    renderStats();
     renderDaily();
-    renderAchievements();
   }
 
   function bindEvents() {
@@ -404,7 +351,6 @@
       activeExercise.rewinds += 1;
       state.totalRewinds += 1;
       saveState();
-      renderStats();
     });
     window.addEventListener("morse:pause", () => { activeExercise.pauses += 1; });
     window.addEventListener("morse:score", (event) => handleScore(event.detail));
