@@ -138,6 +138,10 @@
     return mode === "phrases";
   }
 
+  function isRandomLettersMode(mode) {
+    return mode === "random-letters";
+  }
+
   function isThemedPracticeMode(mode) {
     return isThemedSentenceMode(mode) || isThemedWordMode(mode);
   }
@@ -398,6 +402,8 @@
     } else if (mode === "mixed") {
       const source = LETTERS + NUMBERS;
       exercise = randomSequence(source, group, `${mode}:${group}`);
+    } else if (mode === "random-letters") {
+      exercise = randomSequence(LETTERS, group, `${mode}:${group}`);
     } else if (mode === "phrases") {
       setStatus("Loading themed phrases…");
       let pool;
@@ -463,6 +469,8 @@
       listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
     } else if (mode === "mixed") {
       listenExercise = randomSequence(LETTERS + NUMBERS, group, `listen:${mode}:${group}`);
+    } else if (mode === "random-letters") {
+      listenExercise = randomSequence(LETTERS, group, `listen:${mode}:${group}`);
     } else if (mode === "phrases") {
       setListenStatus("Loading themed phrases…");
       let pool;
@@ -517,13 +525,13 @@
 
   function updateSummary() {
     const mode = $("mode-select").value;
-    const exerciseType = isSentenceMode() ? "Sentence" : isWordMode() ? "Phrase" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = isSentenceMode() ? "Sentence" : isWordMode() ? "Phrase" : isRandomLettersMode(mode) ? "Random letters" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateListenSummary() {
     const mode = $("listen-mode-select").value;
-    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : ["phrases", "halloween"].includes(mode) ? "Phrase" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : ["phrases", "halloween"].includes(mode) ? "Phrase" : isRandomLettersMode(mode) ? "Random letters" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("listen-summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
