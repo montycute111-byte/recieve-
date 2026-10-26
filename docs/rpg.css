@@ -1,3 +1,7 @@
+[hidden] {
+  display: none !important;
+}
+
 .rpg-section {
   border-color: var(--line);
   background: var(--panel);
