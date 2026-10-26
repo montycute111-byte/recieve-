@@ -30,8 +30,98 @@
   gap: 0.55rem;
 }
 
-.account-section > p {
+.account-bar {
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) auto;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+  border-color: #b8d9d4;
+  background: linear-gradient(135deg, #ffffff 0%, #eff9f7 100%);
+  box-shadow: 0 12px 30px #126e6410;
+}
+
+.account-bar-copy {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.account-badge {
+  display: grid;
+  place-items: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  border-radius: 0.85rem;
+  color: #fff;
+  background: linear-gradient(145deg, #167f78, #0c625d);
+  box-shadow: 0 8px 18px #167f7830;
+  font-size: 1.35rem;
+}
+
+.account-bar-copy h2 {
+  margin: 0.12rem 0 0.2rem;
+  font-size: 1.02rem;
+}
+
+.account-bar-copy p:last-child {
   margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.account-form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.account-form label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.account-form input {
+  width: 150px;
+  min-width: 0;
+  padding: 0.52rem 0.65rem;
+  border: 1px solid #cbdedc;
+  border-radius: 0.55rem;
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+}
+
+.account-form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px #167f7819;
+}
+
+.account-signed-in-copy {
+  display: grid;
+  gap: 0.12rem;
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+
+.account-signed-in-copy span {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.account-message {
+  margin: 0;
+  min-height: 1.1rem;
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 0.75rem;
 }
 
 .challenge-progress i {
@@ -243,9 +333,29 @@
 }
 
 @media (max-width: 850px) {
+  .account-bar {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 620px) {
+  .account-bar {
+    padding: 14px;
+  }
+
+  .account-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .account-form label,
+  .account-form input {
+    width: 100%;
+  }
+
+  .account-form .auth-actions {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
