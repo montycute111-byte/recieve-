@@ -8,7 +8,7 @@
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
-  <link rel="stylesheet" href="rpg.css/rpg.css?v=11">
+  <link rel="stylesheet" href="rpg.css/rpg.css?v=12">
 </head>
 <body>
   <div class="app-shell">
@@ -133,13 +133,15 @@
           <div class="setting-section"><h2>CW timing</h2><label>Character speed <output id="character-wpm-value">5 WPM</output><input id="character-wpm" type="range" min="1" max="40" value="5"></label><label>Effective speed <output id="effective-wpm-value">5 WPM</output><input id="effective-wpm" type="range" min="1" max="40" value="5"></label><label>Tone frequency <output id="frequency-value">699 Hz</output><input id="frequency" type="range" min="300" max="1000" value="699"></label><label>Volume <output id="volume-value">62%</output><input id="volume" type="range" min="0" max="100" value="62"></label><button id="reset-settings">Reset to Standard Timing</button></div>
           <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
           <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Your settings and progress stay in this browser on this device.</p></div>
+          <div class="setting-section account-section"><h2>Account &amp; cloud save</h2><p class="muted">Sign in to sync your daily quests and sentence progress across devices.</p><div id="auth-signed-out"><label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters"></label><div class="auth-actions"><button type="button" class="primary" id="auth-sign-in">Sign in</button><button type="button" id="auth-sign-up">Create account</button></div></div><div id="auth-signed-in" hidden><p>Signed in as <strong id="auth-user-label"></strong></p><button type="button" id="auth-sign-out">Sign out</button></div><p class="answer-message" id="auth-message" role="status"></p></div>
         </div>
       </section>
     </main>
   </div>
   <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=18"></script>
+  <script src="rpg.js?v=19"></script>
   <script src="app-word-themes-v2.js?v=3"></script>
+  <script type="module" src="firebase.js?v=1"></script>
 </body>
 </html>

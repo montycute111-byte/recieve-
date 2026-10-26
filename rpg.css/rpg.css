@@ -24,6 +24,16 @@
   background: #edf1f1;
 }
 
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.account-section > p {
+  margin: 0;
+}
+
 .challenge-progress i {
   display: block;
   height: 100%;

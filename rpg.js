@@ -68,24 +68,30 @@
   const state = loadState();
   let activeExercise = { mode: "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false };
   let toastTimer = 0;
+  let cloudUser = null;
+  let cloudReady = false;
+  let cloudSaveTimer = 0;
+
+  function normalizeState(saved) {
+    const fresh = defaultState();
+    return {
+      ...fresh,
+      ...saved,
+      themeProgress: Object.fromEntries(THEME_META.map((theme) => [theme.id, {
+        ...fresh.themeProgress[theme.id],
+        ...((saved.themeProgress || {})[theme.id] || {}),
+        completed: Array.isArray((saved.themeProgress || {})[theme.id]?.completed) ? [...new Set((saved.themeProgress || {})[theme.id].completed)] : []
+      }])),
+      daily: { ...fresh.daily, ...(saved.daily || {}), questIds: Array.isArray((saved.daily || {}).questIds) ? saved.daily.questIds : [], progress: { ...fresh.daily.progress, ...((saved.daily || {}).progress || {}) }, completed: Array.isArray((saved.daily || {}).completed) ? saved.daily.completed : [] }
+    };
+  }
 
   function loadState() {
-    const fresh = defaultState();
     try {
       const saved = JSON.parse(window.localStorage?.getItem(STORAGE_KEY) || "null");
-      if (!saved || typeof saved !== "object") return fresh;
-      return {
-        ...fresh,
-        ...saved,
-        themeProgress: Object.fromEntries(THEME_META.map((theme) => [theme.id, {
-          ...fresh.themeProgress[theme.id],
-          ...((saved.themeProgress || {})[theme.id] || {}),
-          completed: Array.isArray((saved.themeProgress || {})[theme.id]?.completed) ? [...new Set((saved.themeProgress || {})[theme.id].completed)] : []
-        }])),
-        daily: { ...fresh.daily, ...(saved.daily || {}), questIds: Array.isArray((saved.daily || {}).questIds) ? saved.daily.questIds : [], progress: { ...fresh.daily.progress, ...((saved.daily || {}).progress || {}) }, completed: Array.isArray((saved.daily || {}).completed) ? saved.daily.completed : [] }
-      };
+      return saved && typeof saved === "object" ? normalizeState(saved) : defaultState();
     } catch (_) {
-      return fresh;
+      return defaultState();
     }
   }
 
@@ -95,7 +101,34 @@
     } catch (_) {
       // Progress still updates for the current session if storage is blocked.
     }
+    if (cloudReady && cloudUser && window.morseCloud) {
+      window.clearTimeout(cloudSaveTimer);
+      cloudSaveTimer = window.setTimeout(() => {
+        window.morseCloud.saveProgress(cloudUser.uid, state).catch(() => {
+          // Local storage remains available if cloud saving is temporarily unavailable.
+        });
+      }, 800);
+    }
   }
+
+  function replaceState(nextState) {
+    const normalized = normalizeState(nextState);
+    Object.keys(state).forEach((key) => delete state[key]);
+    Object.assign(state, normalized);
+    ensureDaily();
+    renderAll();
+  }
+
+  window.addEventListener("morse:cloud-progress", (event) => {
+    const detail = event.detail || {};
+    cloudUser = detail.user || null;
+    cloudReady = false;
+    if (cloudUser && !detail.error && detail.progress && typeof detail.progress === "object") replaceState(detail.progress);
+    if (cloudUser && !detail.error) {
+      cloudReady = true;
+      saveState();
+    }
+  });
 
   function todayKey(date = new Date()) {
     const year = date.getFullYear();
