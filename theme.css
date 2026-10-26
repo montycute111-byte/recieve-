@@ -1,4 +1,26 @@
 /* Shared visual theme. The resolved data-theme is set by theme.js before the app paints. */
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+  color: transparent;
+  overflow: hidden;
+}
+
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 html[data-theme="dark"] {
   color-scheme: dark;
   --ink: #f1f5f9;
@@ -30,7 +52,7 @@ html[data-theme="dark"] .sidebar {
 html[data-theme="dark"] .brand-mark {
   border-color: #20c9b5;
   color: var(--accent);
-  background: #20c9b512;
+  background: transparent;
 }
 
 html[data-theme="dark"] .brand span,
