@@ -2,6 +2,12 @@
   display: none !important;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .rpg-section {
   border-color: var(--line);
   background: var(--panel);
@@ -734,5 +740,112 @@
   .rpg-toast.accuracy-reward.show,
   .rpg-toast.prominent {
     animation: none;
+  }
+}
+
+@media (max-width: 620px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .account-form,
+  .account-form label,
+  .account-form input {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .account-form {
+    grid-template-columns: 1fr;
+  }
+
+  .account-form .auth-actions {
+    grid-column: auto;
+  }
+
+  .side-nav {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .nav-item {
+    min-width: 0;
+    flex: 1 1 0;
+    gap: 2px;
+    padding: 3px 1px;
+    font-size: 0;
+    line-height: 1;
+  }
+
+  .nav-item span {
+    width: auto;
+    height: 17px;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .nav-item::after {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: currentColor;
+    font-size: 8px;
+    line-height: 1.05;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nav-item[data-view="practice"]::after { content: "Practice"; }
+  .nav-item[data-view="listen-only"]::after { content: "Zen"; }
+  .nav-item[data-view="progress"]::after { content: "Progress"; }
+  .nav-item[data-view="stats"]::after { content: "Stats"; }
+  .nav-item[data-view="alphabet"]::after { content: "Alphabet"; }
+  .nav-item[data-view="sending"]::after { content: "Send"; }
+  .nav-item[data-view="settings"]::after { content: "Settings"; }
+  .nav-item[data-view="account"]::after { content: "Account"; }
+}
+
+@media (max-width: 620px) {
+  .main-content {
+    padding: 16px 14px 86px;
+  }
+
+  .page-header {
+    margin-bottom: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 28px;
+  }
+
+  .settings-strip {
+    gap: 9px;
+    padding: 11px;
+    margin-bottom: 14px;
+  }
+
+  .listening-card,
+  .answer-card {
+    padding: 13px;
+    margin-bottom: 14px;
+  }
+
+  .listening-window {
+    min-height: 145px;
+    margin: 12px 0;
+  }
+
+  .controls {
+    gap: 6px;
+  }
+
+  .controls button {
+    padding: 8px 6px;
+  }
+
+  .answer-card textarea {
+    min-height: 100px;
+    margin: 14px 0 10px;
   }
 }
