@@ -19,7 +19,8 @@
         <div class="brand-mark"><img src="assets/brand-mark.png?v=2" alt=""></div>
         <div><strong>MorseReceive</strong><span>Listen. Copy. Improve.</span></div>
       </div>
-      <nav class="side-nav" aria-label="Primary navigation">
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
+      <nav class="side-nav" id="primary-navigation" aria-label="Primary navigation">
         <button class="nav-item active" data-view="practice"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/practice.png?v=6" alt=""></span><span class="nav-label">Practice</span></button>
         <button class="nav-item" data-view="listen-only"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/zen.png?v=6" alt=""></span><span class="nav-label">Zen Mode</span></button>
         <button class="nav-item" data-view="progress"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/progress.png?v=6" alt=""></span><span class="nav-label">Progress</span></button>
@@ -30,6 +31,7 @@
       </nav>
       <div class="sidebar-note">Train your ear one clean character at a time.</div>
     </aside>
+    <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" hidden></div>
 
     <main class="main-content">
       <div class="global-save-bar" aria-label="Manual cloud saving">
@@ -169,7 +171,7 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="rpg.js?v=32"></script>
-  <script src="app-word-themes-v2.js?v=7"></script>
+  <script src="app-word-themes-v2.js?v=8"></script>
   <script type="module" src="firebase.js?v=4"></script>
 </body>
 </html>

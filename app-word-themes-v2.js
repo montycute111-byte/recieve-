@@ -1168,7 +1168,28 @@
   }
 
   function bindEvents() {
-    document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
+    const mobileNavToggle = $("mobile-nav-toggle");
+    const mobileNavBackdrop = $("mobile-nav-backdrop");
+    const closeMobileNav = () => {
+      document.body.classList.remove("mobile-nav-open");
+      if (mobileNavToggle) {
+        mobileNavToggle.setAttribute("aria-expanded", "false");
+        mobileNavToggle.setAttribute("aria-label", "Open navigation");
+      }
+      if (mobileNavBackdrop) mobileNavBackdrop.hidden = true;
+    };
+    const toggleMobileNav = () => {
+      const isOpen = document.body.classList.toggle("mobile-nav-open");
+      if (mobileNavToggle) {
+        mobileNavToggle.setAttribute("aria-expanded", String(isOpen));
+        mobileNavToggle.setAttribute("aria-label", isOpen ? "Close navigation" : "Open navigation");
+      }
+      if (mobileNavBackdrop) mobileNavBackdrop.hidden = !isOpen;
+    };
+    mobileNavToggle?.addEventListener("click", toggleMobileNav);
+    mobileNavBackdrop?.addEventListener("click", closeMobileNav);
+    document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeMobileNav(); });
+    document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => { switchView(button.dataset.view); closeMobileNav(); }));
     $("mode-select").addEventListener("change", () => { renderThemeSelectors(); generateExercise(); });
     $("group-size-select").addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
