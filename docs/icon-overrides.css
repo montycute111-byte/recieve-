@@ -24,6 +24,7 @@ html[data-theme="dark"] .nav-item.active > .nav-icon { color: #00e5ff; }
 .icon-paper-plane-tilt { --icon-source: url("assets/icons/paper-plane-tilt.svg"); }
 .icon-gear { --icon-source: url("assets/icons/gear.svg"); }
 .icon-user-circle { --icon-source: url("assets/icons/user-circle.svg"); }
+.icon-morse-code-alphabet { --icon-source: url("assets/icons/morse-code-alphabet.svg"); }
 .icon-joystick, .icon-video-games { --icon-source: url("assets/icons/joystick.svg"); }
 .icon-film-slate, .icon-movies-tv { --icon-source: url("assets/icons/film-slate.svg"); }
 .icon-chat-circle-dots, .icon-famous-quotes { --icon-source: url("assets/icons/chat-circle-dots.svg"); }
