@@ -393,12 +393,19 @@ html[data-theme="dark"] .account-message.error {
 
 @media (max-width: 620px) {
   .app-shell {
-    padding-bottom: calc(74px + env(safe-area-inset-bottom));
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
 
   .sidebar {
-    padding-bottom: env(safe-area-inset-bottom);
-    height: calc(67px + env(safe-area-inset-bottom));
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .main-content {
+    padding-bottom: calc(74px + env(safe-area-inset-bottom));
   }
 
   .theme-setting-control {
