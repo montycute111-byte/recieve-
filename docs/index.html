@@ -3,12 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101820">
+  <meta name="theme-color" content="#0B1420">
   <meta name="description" content="MorseReceive — listen, copy, and improve your Morse code reception.">
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
   <link rel="stylesheet" href="rpg.css?v=25">
+  <link rel="stylesheet" href="theme.css?v=1">
+  <script src="theme.js?v=1"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -149,6 +151,7 @@
         <div class="panel settings-form">
           <div class="setting-section"><h2>CW timing</h2><label>Character speed <output id="character-wpm-value">5 WPM</output><input id="character-wpm" type="range" min="1" max="40" value="5"></label><label>Effective speed <output id="effective-wpm-value">5 WPM</output><input id="effective-wpm" type="range" min="1" max="40" value="5"></label><label>Tone frequency <output id="frequency-value">699 Hz</output><input id="frequency" type="range" min="300" max="1000" value="699"></label><label>Volume <output id="volume-value">62%</output><input id="volume" type="range" min="0" max="100" value="62"></label><button id="reset-settings">Reset to Standard Timing</button></div>
           <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
+          <div class="setting-section"><h2>Appearance</h2><div class="theme-setting-control"><div class="theme-setting-copy"><strong>Theme</strong><p class="muted">Choose the look for this device. This never changes cloud progress.</p></div><select id="theme-select" aria-label="Theme"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System Default</option></select></div></div>
           <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Settings are saved separately on this device. Progress is temporary until you sign in and press Save Progress.</p></div>
         </div>
       </section>

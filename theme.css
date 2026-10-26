@@ -1,0 +1,354 @@
+/* Shared visual theme. The resolved data-theme is set by theme.js before the app paints. */
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f1f5f9;
+  --muted: #94a3b8;
+  --line: #294052;
+  --paper: #0b1420;
+  --panel: #152536;
+  --accent: #20c9b5;
+  --accent-dark: #159987;
+  --warm: #e7b968;
+  --shadow: 0 18px 50px #00000035;
+  --nav: #101c29;
+  --selected: #194c50;
+  --input: #102031;
+  --panel-soft: #1b3042;
+}
+
+html[data-theme="dark"] body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .sidebar {
+  background: var(--nav);
+  color: var(--ink);
+  border-right: 1px solid var(--line);
+}
+
+html[data-theme="dark"] .brand-mark {
+  border-color: #20c9b5;
+  color: var(--accent);
+  background: #20c9b512;
+}
+
+html[data-theme="dark"] .brand span,
+html[data-theme="dark"] .sidebar-note,
+html[data-theme="dark"] .nav-item,
+html[data-theme="dark"] .page-header p:not(.eyebrow),
+html[data-theme="dark"] .muted,
+html[data-theme="dark"] .settings-strip label,
+html[data-theme="dark"] .settings-form label,
+html[data-theme="dark"] .answer-message,
+html[data-theme="dark"] .result,
+html[data-theme="dark"] .shortcut-hint {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .nav-item {
+  background: transparent;
+}
+
+html[data-theme="dark"] .nav-item:hover {
+  background: #183440;
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .nav-item.active {
+  background: var(--selected);
+  color: var(--ink);
+  box-shadow: inset 3px 0 0 var(--accent), 0 8px 20px #0000001f;
+}
+
+html[data-theme="dark"] .nav-item.active .nav-label {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .sidebar-note {
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .panel,
+html[data-theme="dark"] .rpg-section,
+html[data-theme="dark"] .listening-card,
+html[data-theme="dark"] .answer-card,
+html[data-theme="dark"] .settings-strip,
+html[data-theme="dark"] .settings-form,
+html[data-theme="dark"] .account-bar,
+html[data-theme="dark"] .stats-section,
+html[data-theme="dark"] .challenge,
+html[data-theme="dark"] .progression-strip {
+  background: var(--panel);
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+
+html[data-theme="dark"] .account-bar {
+  background: linear-gradient(135deg, #152536 0%, #173543 100%);
+}
+
+html[data-theme="dark"] .settings-strip,
+html[data-theme="dark"] .settings-form,
+html[data-theme="dark"] .listening-card,
+html[data-theme="dark"] .answer-card,
+html[data-theme="dark"] .account-bar,
+html[data-theme="dark"] .stats-section {
+  border-radius: 18px;
+}
+
+html[data-theme="dark"] select,
+html[data-theme="dark"] input[type="text"],
+html[data-theme="dark"] input[type="email"],
+html[data-theme="dark"] input[type="password"],
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] .account-form input,
+html[data-theme="dark"] .settings-strip select {
+  border-color: var(--line);
+  background: var(--input);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] select option {
+  background: var(--panel);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] button {
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: #204052;
+}
+
+html[data-theme="dark"] button.primary,
+html[data-theme="dark"] .primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #06231f;
+  box-shadow: 0 8px 18px #20c9b52b;
+}
+
+html[data-theme="dark"] button.primary:hover:not(:disabled),
+html[data-theme="dark"] .primary:hover:not(:disabled) {
+  background: #5be0cf;
+  border-color: #5be0cf;
+  color: #06231f;
+}
+
+html[data-theme="dark"] .listening-window {
+  border-color: var(--line);
+  background: linear-gradient(135deg, #102031, #173141);
+}
+
+html[data-theme="dark"] .listening-window.is-playing {
+  background: linear-gradient(135deg, #123f42, #173b4a);
+  box-shadow: inset 0 0 0 1px #20c9b533, 0 12px 28px #00000026;
+}
+
+html[data-theme="dark"] .listening-window strong {
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .bars i {
+  background: var(--accent);
+}
+
+html[data-theme="dark"] .profile-pill {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .morse-cell,
+html[data-theme="dark"] .theme-option,
+html[data-theme="dark"] .theme-progress-card,
+html[data-theme="dark"] .progression-chip,
+html[data-theme="dark"] .category-stat-row,
+html[data-theme="dark"] .wpm-stat-row,
+html[data-theme="dark"] .stats-chart-card {
+  background: var(--panel-soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .theme-option:hover,
+html[data-theme="dark"] .theme-option.selected {
+  border-color: var(--accent);
+  background: #194c50;
+}
+
+html[data-theme="dark"] .theme-progress-icon {
+  background: #194c50;
+}
+
+html[data-theme="dark"] .daily-quest-summary,
+html[data-theme="dark"] .challenge-card,
+html[data-theme="dark"] .chart-card,
+html[data-theme="dark"] .chart-range {
+  border-color: var(--line);
+  background: var(--panel-soft);
+  color: var(--muted);
+}
+
+html[data-theme="dark"] .challenge-card.complete {
+  border-color: #237e78;
+  background: #163c42;
+}
+
+html[data-theme="dark"] .challenge-icon {
+  color: #f6ca72;
+  background: #3d3422;
+}
+
+html[data-theme="dark"] .challenge-card.complete .challenge-icon {
+  color: var(--accent);
+  background: #194c50;
+}
+
+html[data-theme="dark"] .daily-quest-summary strong,
+html[data-theme="dark"] .progression-chip,
+html[data-theme="dark"] .progression-xp strong,
+html[data-theme="dark"] .stats-hero strong {
+  color: var(--accent);
+}
+
+html[data-theme="dark"] .stats-section > .section-heading > strong {
+  border-color: var(--line);
+  color: var(--accent);
+  background: var(--panel-soft);
+}
+
+html[data-theme="dark"] .revealed-answer {
+  border-color: #80652d;
+  color: #f6ca72;
+  background: #2a261d;
+}
+
+html[data-theme="dark"] .revealed-answer strong {
+  color: #f6ca72;
+}
+
+html[data-theme="dark"] .chart-range button.active {
+  color: #06231f;
+  background: var(--accent);
+}
+
+html[data-theme="dark"] .chart-axis {
+  stroke: var(--line);
+}
+
+html[data-theme="dark"] .result.perfect-result {
+  border-color: #2b9f83;
+  background: #163c42;
+}
+
+html[data-theme="dark"] .reward-line {
+  color: var(--accent);
+}
+
+html[data-theme="dark"] .sending-card {
+  overflow: hidden;
+}
+
+html[data-theme="dark"] .challenge-progress {
+  background: #0d1d2b;
+}
+
+html[data-theme="dark"] .progression-bar {
+  background: #0c1d2a;
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .progression-bar > span,
+html[data-theme="dark"] .challenge-progress > span {
+  background: linear-gradient(90deg, #20c9b5, #65e1cf);
+}
+
+html[data-theme="dark"] .result {
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .rpg-toast,
+html[data-theme="dark"] .toast,
+html[data-theme="dark"] .level-up-card {
+  background: var(--panel);
+  color: var(--ink);
+  border-color: var(--line);
+  box-shadow: 0 24px 70px #00000055;
+}
+
+html[data-theme="dark"] .rpg-toast strong,
+html[data-theme="dark"] .level-up-number {
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .global-save-bar {
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] .setting-section {
+  border-color: var(--line);
+}
+
+html[data-theme="dark"] input[type="range"] {
+  accent-color: var(--accent);
+}
+
+html[data-theme="dark"] :focus-visible {
+  outline: 3px solid #20c9b566;
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] .theme-select-all {
+  color: var(--accent);
+}
+
+html[data-theme="dark"] .account-message.error {
+  color: #ff9eaa;
+}
+
+/* Settings appearance selector */
+.theme-setting-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.theme-setting-copy p {
+  margin: 0;
+}
+
+.theme-setting-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 230px);
+  align-items: center;
+  gap: 1rem;
+}
+
+.theme-setting-control select {
+  width: 100%;
+}
+
+@media (max-width: 620px) {
+  .app-shell {
+    padding-bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+
+  .sidebar {
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(67px + env(safe-area-inset-bottom));
+  }
+
+  .theme-setting-control {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .theme-setting-control select {
+    min-height: 44px;
+  }
+}
