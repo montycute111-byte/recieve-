@@ -95,6 +95,9 @@
   let cloudReady = false;
   let progressDirty = false;
   let selectedStatsRange = 7;
+  let levelUpQueueTimer = 0;
+  let queuedLevelUp = 0;
+  let levelUpTimer = 0;
 
   function normalizeState(saved) {
     const fresh = defaultState();
@@ -367,12 +370,15 @@
     const value = Math.max(0, Math.round(Number(amount) || 0));
     if (!value) return 0;
     if (rewardId && state.progression.claimedRewardIds.includes(rewardId)) return 0;
+    const levelBefore = getLevelInfo().level;
     if (rewardId) state.progression.claimedRewardIds.push(rewardId);
     state.progression.totalXp += value;
     state.progression.xpRewardHistory.push({ id: rewardId || `${todayKey()}-${Date.now()}`, date: todayKey(), amount: value, reason });
     state.progression.xpRewardHistory = state.progression.xpRewardHistory.slice(-1500);
     getActivity().xp += value;
     markDirty();
+    const levelAfter = getLevelInfo().level;
+    if (levelAfter > levelBefore) queueLevelUp(levelAfter);
     return value;
   }
 
@@ -435,14 +441,18 @@
   }
 
   function showLevelUp(level) {
-    const toast = $("rpg-toast");
-    if (!toast) return;
-    toast.classList.remove("prominent", "accuracy-reward", "xp-reward", "show");
-    toast.classList.add("level-up");
-    toast.innerHTML = `<span class="xp-toast-kicker">✦ LEVEL UP ✦</span><strong class="xp-toast-amount">LEVEL ${level}</strong><span class="xp-toast-label">Your signal is getting stronger</span>`;
-    window.clearTimeout(toastTimer);
-    window.requestAnimationFrame(() => toast.classList.add("show"));
-    toastTimer = window.setTimeout(() => toast.classList.remove("show"), 3500);
+    const overlay = $("level-up-overlay");
+    if (!overlay) return;
+    const levelLabel = $("level-up-level");
+    if (levelLabel) levelLabel.textContent = `LEVEL ${level}`;
+    overlay.hidden = false;
+    overlay.classList.remove("show");
+    window.clearTimeout(levelUpTimer);
+    window.requestAnimationFrame(() => overlay.classList.add("show"));
+    levelUpTimer = window.setTimeout(() => {
+      overlay.classList.remove("show");
+      window.setTimeout(() => { if (!overlay.classList.contains("show")) overlay.hidden = true; }, 450);
+    }, 3900);
     try {
       const context = new (window.AudioContext || window.webkitAudioContext)();
       [523.25, 659.25, 783.99].forEach((frequency, index) => {
@@ -458,6 +468,17 @@
       });
       window.setTimeout(() => context.close(), 700);
     } catch (_) {}
+  }
+
+  function queueLevelUp(level) {
+    queuedLevelUp = Math.max(queuedLevelUp, level);
+    window.clearTimeout(levelUpQueueTimer);
+    levelUpQueueTimer = window.setTimeout(() => {
+      const reachedLevel = queuedLevelUp;
+      queuedLevelUp = 0;
+      levelUpQueueTimer = 0;
+      showLevelUp(reachedLevel);
+    }, 450);
   }
 
   function showRpgToast(message, prominent = false) {
@@ -540,13 +561,11 @@
     const exact = accuracy === 100 && expected === actual;
     const matches = Math.max(0, Number(detail.matches) || (exact ? maxLength : 0));
     let earned = 0;
-    let levelBefore = getLevelInfo().level;
     if (!activeExercise.statsRecorded) {
       state.totalAccuracyPoints += accuracy * maxLength;
       state.totalAccuracyCharacters += maxLength;
       const result = recordGradedActivity(detail, exact, matches, maxLength);
       earned += result.xp;
-      levelBefore = result.levelBefore.level;
     }
     if (accuracy !== 100 || expected !== actual) {
       state.perfectStreak = 0;
@@ -596,8 +615,6 @@
     saveState();
     showAccuracyToast();
     renderAll();
-    const levelAfter = getLevelInfo().level;
-    if (levelAfter > levelBefore) window.setTimeout(() => showLevelUp(levelAfter), 700);
     if (earned) window.setTimeout(() => showXpToast(earned), 1500);
   }
 

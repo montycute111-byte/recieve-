@@ -8,7 +8,7 @@
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
-  <link rel="stylesheet" href="rpg.css?v=22">
+  <link rel="stylesheet" href="rpg.css?v=23">
 </head>
 <body>
   <div class="app-shell">
@@ -155,8 +155,17 @@
     </main>
   </div>
   <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
+  <div class="level-up-overlay" id="level-up-overlay" role="status" aria-live="polite" hidden>
+    <div class="level-up-card">
+      <div class="level-up-rays" aria-hidden="true"></div>
+      <div class="level-up-icon" aria-hidden="true">✦</div>
+      <span class="level-up-kicker">LEVEL UP</span>
+      <strong class="level-up-number" id="level-up-level">LEVEL 2</strong>
+      <span class="level-up-label">Your signal is getting stronger</span>
+    </div>
+  </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=26"></script>
+  <script src="rpg.js?v=27"></script>
   <script src="app.js?v=41"></script>
   <script type="module" src="firebase.js?v=4"></script>
 </body>
