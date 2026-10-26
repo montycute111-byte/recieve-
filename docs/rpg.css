@@ -365,7 +365,7 @@
 
 .stats-section {
   min-width: 0;
-  padding: 1.1rem 1.2rem 1.2rem;
+  padding: 1.5rem 2rem 1.75rem !important;
   margin-top: 1rem;
 }
 
@@ -684,7 +684,7 @@
   }
 
   .stats-section {
-    padding: 0.95rem;
+    padding: 1.15rem !important;
   }
 
   .stats-section > .section-heading {
