@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="rpg.css?v=26">
   <link rel="stylesheet" href="icon-overrides.css?v=5">
   <link rel="stylesheet" href="theme.css?v=3">
+  <link rel="stylesheet" href="gateway.css?v=1">
   <script src="theme.js?v=1"></script>
 </head>
 <body>
@@ -169,10 +170,21 @@
           <div class="setting-section"><h2>CW timing</h2><label>Character speed <output id="character-wpm-value">5 WPM</output><input id="character-wpm" type="range" min="1" max="40" value="5"></label><label>Effective speed <output id="effective-wpm-value">5 WPM</output><input id="effective-wpm" type="range" min="1" max="40" value="5"></label><label>Tone frequency <output id="frequency-value">699 Hz</output><input id="frequency" type="range" min="300" max="1000" value="699"></label><label>Volume <output id="volume-value">62%</output><input id="volume" type="range" min="0" max="100" value="62"></label><button id="reset-settings">Reset to Standard Timing</button></div>
           <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
           <div class="setting-section"><h2>Appearance</h2><div class="theme-setting-control"><div class="theme-setting-copy"><strong>Theme</strong><p class="muted">Choose the look for this device. This never changes cloud progress.</p></div><select id="theme-select" aria-label="Theme"><option value="dark">Dark</option><option value="light">Light</option><option value="system">System Default</option></select></div></div>
-          <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Settings are saved separately on this device. Progress is temporary until you sign in and press Save Progress.</p></div>
+          <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Settings are saved separately on this device. Guest progress is temporary here; signed-in progress saves to the cloud when you press Save Progress.</p><div class="settings-account-actions"><div><strong>Account access</strong><p class="muted">Sign in or create an account to keep progress across devices.</p></div><button type="button" id="settings-account-action">Log In or Create Account</button></div></div>
         </div>
       </section>
     </main>
+  </div>
+  <div class="account-gateway" id="account-gateway" role="dialog" aria-modal="true" aria-labelledby="gateway-title" hidden>
+    <div class="account-gateway-card panel">
+      <div class="account-gateway-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><rect x="2.5" y="2.5" width="27" height="27" rx="8" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="16" r="2.25" fill="currentColor"/><path d="M16 16h7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+      <p class="eyebrow">MORSEQUEST</p>
+      <h1 id="gateway-title">Welcome to MorseQuest</h1>
+      <p class="account-gateway-lede">Learn Morse code, practice your skills, earn XP, and level up!</p>
+      <div class="account-gateway-actions"><button type="button" class="primary" id="gateway-sign-in">Log In</button><button type="button" id="gateway-sign-up">Create Account</button><button type="button" class="account-gateway-guest" id="gateway-guest">Continue as Guest</button></div>
+      <p class="account-gateway-note">Guest progress stays in this browser. Sign in to save and sync across devices.</p>
+      <p class="account-gateway-message" id="gateway-message" role="status"></p>
+    </div>
   </div>
   <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
   <div class="level-up-overlay" id="level-up-overlay" role="status" aria-live="polite" hidden>
@@ -185,8 +197,8 @@
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=31"></script>
+  <script src="rpg.js?v=32"></script>
   <script src="app.js?v=43"></script>
-  <script type="module" src="firebase.js?v=5"></script>
+  <script type="module" src="firebase.js?v=6"></script>
 </body>
 </html>

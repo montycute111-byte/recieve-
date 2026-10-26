@@ -75,6 +75,54 @@ async function saveProgress(userId, progress) {
 window.morseCloud = { auth, loadProgress, saveProgress };
 
 const $ = (id) => document.getElementById(id);
+const SESSION_KEY = "morseQuestSession";
+
+function readSession() {
+  try { return window.localStorage.getItem(SESSION_KEY) || ""; } catch (_) { return ""; }
+}
+
+function writeSession(value) {
+  try { window.localStorage.setItem(SESSION_KEY, value); } catch (_) {}
+}
+
+function clearSession() {
+  try { window.localStorage.removeItem(SESSION_KEY); } catch (_) {}
+}
+
+function setGatewayVisible(visible) {
+  const gateway = $("account-gateway");
+  if (!gateway) return;
+  gateway.hidden = !visible;
+  document.body.classList.toggle("account-gateway-open", visible);
+}
+
+function setGatewayMessage(message, isError = false) {
+  const element = $("gateway-message");
+  if (!element) return;
+  element.textContent = message;
+  element.style.color = isError ? "#f39a9a" : "";
+}
+
+function openAccountForm(action = "signin") {
+  writeSession("account");
+  setGatewayVisible(false);
+  document.querySelector('.nav-item[data-view="account"]')?.click();
+  setMessage(action === "signup" ? "Create your MorseQuest account to save progress across devices." : "Sign in to continue.");
+  window.setTimeout(() => $("auth-email")?.focus(), 0);
+}
+
+function continueAsGuest() {
+  writeSession("guest");
+  setGatewayMessage("");
+  setGatewayVisible(false);
+  window.dispatchEvent(new CustomEvent("morse:guest-session", { detail: { active: true } }));
+  renderAccount(null);
+}
+
+function showAccountGateway() {
+  setGatewayMessage("");
+  setGatewayVisible(true);
+}
 
 function setMessage(message, isError = false) {
   const element = $("auth-message");
@@ -127,11 +175,16 @@ function renderAccount(user) {
   if (signedOut) signedOut.hidden = Boolean(user);
   if (signedIn) signedIn.hidden = !user;
   if (user && $("auth-user-label")) $("auth-user-label").textContent = user.email || "your account";
+  const isGuest = !user && readSession() === "guest";
   if ($("account-save-copy")) $("account-save-copy").textContent = user
     ? "Signed in: cloud progress saves when you press Save Progress."
-    : "Signed out: progress is temporary. Sign in to save it.";
+    : isGuest
+      ? "Guest mode: progress is saved only in this browser. Sign in to sync across devices."
+      : "Choose Guest for temporary local practice, or sign in to save progress in the cloud.";
   setSaveButtonsDisabled(true);
-  setSaveStatus(user ? "Ready to save manually" : "Sign in to save progress");
+  setSaveStatus(user ? "Ready to save manually" : isGuest ? "Guest progress is local only" : "Sign in to save progress");
+  const settingsAction = $("settings-account-action");
+  if (settingsAction) settingsAction.textContent = user ? "Open Account" : "Log In or Create Account";
 }
 
 async function saveProgressFromButton() {
@@ -180,11 +233,20 @@ $("auth-sign-in")?.addEventListener("click", () => runAuthAction("signin"));
 $("auth-sign-up")?.addEventListener("click", () => runAuthAction("signup"));
 $("auth-save-progress")?.addEventListener("click", saveProgressFromButton);
 $("global-save-progress")?.addEventListener("click", saveProgressFromButton);
+$("gateway-sign-in")?.addEventListener("click", () => openAccountForm("signin"));
+$("gateway-sign-up")?.addEventListener("click", () => openAccountForm("signup"));
+$("gateway-guest")?.addEventListener("click", continueAsGuest);
+$("settings-account-action")?.addEventListener("click", () => {
+  if (auth.currentUser) document.querySelector('.nav-item[data-view="account"]')?.click();
+  else openAccountForm("signin");
+});
 $("auth-sign-out")?.addEventListener("click", async () => {
   if (window.morseProgress?.isDirty() && !window.confirm("You have unsaved progress. Sign out anyway?")) return;
   try {
     await signOut(auth);
-    setMessage("Signed out. Progress remains saved on this device.");
+    clearSession();
+    setMessage("Signed out. Choose Guest for temporary local practice or sign in again.");
+    showAccountGateway();
   } catch (error) {
     setMessage(friendlyAuthError(error), true);
   }
@@ -203,8 +265,16 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) {
     loadedCloudRevision = 0;
     window.dispatchEvent(new CustomEvent("morse:cloud-progress", { detail: { user: null } }));
+    if (readSession() === "guest") {
+      setGatewayVisible(false);
+      window.dispatchEvent(new CustomEvent("morse:guest-session", { detail: { active: true } }));
+    } else {
+      showAccountGateway();
+    }
     return;
   }
+  writeSession("account");
+  setGatewayVisible(false);
   try {
     const progress = await loadProgress(user.uid);
     window.dispatchEvent(new CustomEvent("morse:cloud-progress", { detail: { user, progress } }));
@@ -213,3 +283,10 @@ onAuthStateChanged(auth, async (user) => {
     window.dispatchEvent(new CustomEvent("morse:cloud-progress", { detail: { user, error } }));
   }
 });
+
+if (readSession() === "guest") {
+  setGatewayVisible(false);
+  window.dispatchEvent(new CustomEvent("morse:guest-session", { detail: { active: true } }));
+} else {
+  showAccountGateway();
+}

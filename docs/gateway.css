@@ -1,0 +1,122 @@
+.account-gateway-open {
+  overflow: hidden;
+}
+
+.account-gateway {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(11 20 32 / 82%);
+  backdrop-filter: blur(8px);
+}
+
+.account-gateway[hidden] {
+  display: none;
+}
+
+.account-gateway-card {
+  width: min(100%, 500px);
+  padding: clamp(28px, 6vw, 52px);
+  text-align: center;
+  color: var(--ink);
+  background: var(--panel);
+  border-color: var(--line);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 25%);
+}
+
+.account-gateway-mark {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 18px;
+  color: var(--accent);
+}
+
+.account-gateway-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.account-gateway-card h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(28px, 6vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -.04em;
+}
+
+.account-gateway-lede {
+  max-width: 34rem;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.account-gateway-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.account-gateway-actions button {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 16px;
+}
+
+.account-gateway-guest {
+  margin-top: 4px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.account-gateway-note,
+.account-gateway-message {
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.account-gateway-message {
+  min-height: 18px;
+  margin-top: 8px;
+}
+
+.settings-account-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 4px;
+}
+
+.settings-account-actions strong,
+.settings-account-actions p {
+  display: block;
+  margin: 0;
+}
+
+.settings-account-actions p {
+  margin-top: 3px;
+}
+
+@media (max-width: 620px) {
+  .account-gateway {
+    padding: 14px;
+  }
+
+  .account-gateway-card {
+    padding: 28px 20px;
+  }
+
+  .settings-account-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .settings-account-actions button {
+    width: 100%;
+  }
+}

@@ -2,6 +2,8 @@
   "use strict";
 
   const STORAGE_KEY = "morseReceiveRpgProgress";
+  const SESSION_KEY = "morseQuestSession";
+  const GUEST_PROGRESS_KEY = "morseQuestGuestProgress";
   const THEME_META = [
     { id: "video-games", icon: "video-games", name: "Video Games" },
     { id: "movies-tv", icon: "movies-tv", name: "Movies & TV" },
@@ -124,13 +126,24 @@
   }
 
   function loadState() {
-    // Progress is intentionally temporary for signed-out users. Authenticated
-    // progress is loaded explicitly by Firebase after sign-in.
-    return defaultState();
+    // Guests keep progress only in this browser. Authenticated progress is
+    // loaded explicitly by Firebase after sign-in.
+    if (window.localStorage?.getItem(SESSION_KEY) !== "guest") return defaultState();
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(GUEST_PROGRESS_KEY) || "null");
+      return saved && typeof saved === "object" ? normalizeState(saved) : defaultState();
+    } catch (_) {
+      return defaultState();
+    }
   }
 
   function saveState() {
-    // Progress stays in memory until the user explicitly presses Save Progress.
+    // Guest progress is local-only and may be persisted immediately. Registered
+    // progress remains manual-save-only and is handled by Firebase.
+    if (window.localStorage?.getItem(SESSION_KEY) !== "guest") return;
+    try {
+      window.localStorage.setItem(GUEST_PROGRESS_KEY, JSON.stringify(state));
+    } catch (_) {}
   }
 
   async function saveProgressNow() {
@@ -158,11 +171,20 @@
     const detail = event.detail || {};
     cloudUser = detail.user || null;
     cloudReady = false;
+    if (!cloudUser && window.localStorage?.getItem(SESSION_KEY) === "guest") return;
     if (cloudUser && !detail.error && detail.progress && typeof detail.progress === "object") replaceState(detail.progress);
     else clearProgressState();
     if (cloudUser && !detail.error) {
       cloudReady = true;
     }
+  });
+
+  window.addEventListener("morse:guest-session", (event) => {
+    if (!event.detail?.active) return;
+    cloudUser = null;
+    cloudReady = false;
+    replaceState(loadState());
+    renderAll();
   });
 
   window.morseProgress = {
@@ -173,6 +195,10 @@
   };
 
   function markDirty() {
+    if (window.localStorage?.getItem(SESSION_KEY) === "guest") {
+      saveState();
+      return;
+    }
     progressDirty = true;
   }
 
