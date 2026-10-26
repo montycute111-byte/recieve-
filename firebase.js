@@ -57,8 +57,14 @@ async function saveProgress(userId, progress) {
     }
     const revision = Math.max(Date.now(), currentRevision + 1);
     const nextProgress = { ...progress, cloudRevision: revision };
+    const progressJson = JSON.stringify(nextProgress);
+    if (progressJson.length > 900000) {
+      const error = new Error("Saved progress is too large for one Firestore document.");
+      error.code = "progress-too-large";
+      throw error;
+    }
     transaction.set(reference, {
-      progressJson: JSON.stringify(nextProgress),
+      progressJson,
       updatedAt: serverTimestamp()
     });
     return revision;
@@ -101,7 +107,18 @@ function friendlyAuthError(error) {
     "auth/network-request-failed": "Network error. Check your connection and try again."
   };
   if (error.code === "stale-progress") return error.message;
+  if (error.code === "progress-too-large") return "This progress record is too large to save. Complete fewer stored history items, then try again.";
   return messages[error.code] || "Firebase could not complete that request. Try again.";
+}
+
+function friendlySaveError(error) {
+  if (error.code === "stale-progress") return error.message;
+  if (error.code === "progress-too-large") return "This progress record is too large for Firestore. Try again after reducing stored history.";
+  if (error.code === "permission-denied") return "Firestore rejected this save. Publish the owner-only users/{userId} rules for the MorseTrain project, then try again.";
+  if (error.code === "failed-precondition") return "Firestore is not ready for this project yet. Open Firestore Database in the MorseTrain console and try again.";
+  if (error.code === "unavailable" || error.code === "deadline-exceeded") return "Firestore is temporarily unavailable. Check your connection and try again.";
+  if (error.code === "resource-exhausted") return "Firestore is temporarily rate-limited. Wait a moment and try again.";
+  return "Firestore could not save this progress right now. Try again.";
 }
 
 function renderAccount(user) {
@@ -131,7 +148,7 @@ async function saveProgressFromButton() {
     setMessage("Progress saved. You can sign in on another device to load it.");
     setSaveStatus("Progress saved just now");
   } catch (error) {
-    setMessage("Progress could not be saved. Check Firestore Rules and try again.", true);
+    setMessage(friendlySaveError(error), true);
     setSaveStatus("Save failed — try again", true);
   } finally {
     saveButtons().forEach((button) => {

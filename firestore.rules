@@ -6,7 +6,7 @@ rules_version = '2';
 // Collection: users
 // Document ID: the Firebase Authentication uid
 // Fields:
-//   - progressJson: string, required, max 500,000 characters
+//   - progressJson: string, required, max 900,000 characters
 //   - updatedAt: timestamp, required
 //
 // Progress is stored as JSON text so this client-owned document has a small,
@@ -28,9 +28,8 @@ service cloud.firestore {
         && data.keys().hasAll(['progressJson', 'updatedAt'])
         && data.progressJson is string
         && data.progressJson.size() > 1
-        && data.progressJson.size() <= 500000
-        && data.updatedAt is timestamp
-        && data.updatedAt <= request.time;
+        && data.progressJson.size() <= 900000
+        && data.updatedAt is timestamp;
     }
 
     match /users/{userId} {
