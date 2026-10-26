@@ -24,7 +24,7 @@ html[data-theme="dark"] .nav-item.active > .nav-icon { color: #00e5ff; }
 .icon-paper-plane-tilt { --icon-source: url("assets/icons/paper-plane-tilt.svg"); }
 .icon-gear { --icon-source: url("assets/icons/gear.svg"); }
 .icon-user-circle { --icon-source: url("assets/icons/user-circle.svg"); }
-.morse-alphabet-icon { display: block; width: 100%; height: 100%; color: #909FA6; fill: currentColor; }
+.morse-alphabet-icon { display: block; width: 100%; height: 100%; color: #909FA6; fill: none; }
 .brand-mark-icon { display: block; width: 100%; height: 100%; color: #909FA6; }
 .icon-joystick, .icon-video-games { --icon-source: url("assets/icons/joystick.svg"); }
 .icon-film-slate, .icon-movies-tv { --icon-source: url("assets/icons/film-slate.svg"); }
