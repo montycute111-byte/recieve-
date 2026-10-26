@@ -113,11 +113,17 @@
     renderAll();
   }
 
+  function clearProgressState() {
+    window.localStorage?.removeItem(STORAGE_KEY);
+    replaceState(defaultState());
+  }
+
   window.addEventListener("morse:cloud-progress", (event) => {
     const detail = event.detail || {};
     cloudUser = detail.user || null;
     cloudReady = false;
     if (cloudUser && !detail.error && detail.progress && typeof detail.progress === "object") replaceState(detail.progress);
+    else clearProgressState();
     if (cloudUser && !detail.error) {
       cloudReady = true;
     }

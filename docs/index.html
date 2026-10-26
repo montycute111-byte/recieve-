@@ -8,7 +8,7 @@
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
-  <link rel="stylesheet" href="rpg.css?v=13">
+  <link rel="stylesheet" href="rpg.css?v=14">
 </head>
 <body>
   <div class="app-shell">
@@ -21,6 +21,7 @@
         <button class="nav-item active" data-view="practice"><span>◉</span>Practice</button>
         <button class="nav-item" data-view="listen-only"><span>◌</span>Zen Mode</button>
         <button class="nav-item" data-view="progress"><span>✦</span>Progress</button>
+        <button class="nav-item" data-view="account"><span>☁</span>Account</button>
         <button class="nav-item" data-view="alphabet"><span>⌘</span>Morse Code Alphabet</button>
         <button class="nav-item" data-view="sending"><span>➤</span>Sending</button>
         <button class="nav-item" data-view="settings"><span>⚙</span>Settings</button>
@@ -29,12 +30,6 @@
     </aside>
 
     <main class="main-content">
-      <section class="account-bar panel" id="account-bar" aria-label="Account and cloud saving">
-        <div class="account-bar-copy"><div class="account-badge" aria-hidden="true">☁</div><div><p class="eyebrow">ACCOUNT &amp; CLOUD SAVE</p><h2>Keep your progress with you</h2><p>Sign in to sync daily quests and sentence progress across devices.</p></div></div>
-        <div id="auth-signed-out" class="account-form"><label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters"></label><div class="auth-actions"><button type="button" class="primary" id="auth-sign-in">Sign in</button><button type="button" id="auth-sign-up">Create account</button></div></div>
-        <div id="auth-signed-in" class="account-form" hidden><p class="account-signed-in-copy">Signed in as <strong id="auth-user-label"></strong><span>Press Save Progress when you want to sync.</span></p><div class="auth-actions"><button type="button" class="primary" id="auth-save-progress">Save Progress</button><button type="button" id="auth-sign-out">Sign out</button></div></div>
-        <p class="account-message" id="auth-message" role="status"></p>
-      </section>
       <section class="view active" id="practice-view" aria-labelledby="practice-title">
         <header class="page-header">
           <div><p class="eyebrow">MORSE CODE TRAINER</p><h1 id="practice-title">Practice</h1><p>Train your ear one clean character at a time.</p></div>
@@ -121,6 +116,16 @@
 
       </section>
 
+      <section class="view" id="account-view" aria-labelledby="account-title">
+        <header class="page-header"><div><p class="eyebrow">ACCOUNT &amp; CLOUD SAVE</p><h1 id="account-title">Your Account</h1><p>Sign in to keep your Morse progress available on every device.</p></div><div class="profile-pill"><span class="status-dot"></span><span>Cloud Sync</span></div></header>
+        <section class="account-bar panel" aria-label="Account and cloud saving">
+          <div class="account-bar-copy"><div class="account-badge" aria-hidden="true">☁</div><div><p class="eyebrow">SYNC YOUR TRAINING</p><h2>Keep your progress with you</h2><p>Progress saves only when you press Save Progress.</p></div></div>
+          <div id="auth-signed-out" class="account-form"><label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters"></label><div class="auth-actions"><button type="button" class="primary" id="auth-sign-in">Sign in</button><button type="button" id="auth-sign-up">Create account</button></div></div>
+          <div id="auth-signed-in" class="account-form" hidden><p class="account-signed-in-copy">Signed in as <strong id="auth-user-label"></strong><span>Press Save Progress when you want to sync.</span></p><div class="auth-actions"><button type="button" class="primary" id="auth-save-progress">Save Progress</button><button type="button" id="auth-sign-out">Sign out</button></div></div>
+          <p class="account-message" id="auth-message" role="status"></p>
+        </section>
+      </section>
+
       <section class="view" id="alphabet-view" aria-labelledby="alphabet-title">
         <header class="page-header"><div><p class="eyebrow">REFERENCE</p><h1 id="alphabet-title">Morse Code Alphabet</h1><p>International Morse Code, always available offline.</p></div></header>
         <div class="alphabet-grid panel" id="alphabet-grid"></div>
@@ -145,7 +150,7 @@
   </div>
   <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=20"></script>
+  <script src="rpg.js?v=21"></script>
   <script src="app.js?v=38"></script>
   <script type="module" src="firebase.js?v=2"></script>
 </body>
