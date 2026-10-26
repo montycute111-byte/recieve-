@@ -34,29 +34,12 @@
   filter: drop-shadow(0 3px 5px #00000020);
 }
 
-.nav-item > .nav-icon svg {
+.nav-item > .nav-icon img {
   display: block;
   width: 100%;
   height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  object-fit: contain;
 }
-
-.nav-item > .nav-icon svg [fill="currentColor"] {
-  fill: currentColor;
-  stroke: none;
-}
-
-.nav-item > .icon-practice { color: #22e0df !important; }
-.nav-item > .icon-zen { color: #bd68ff !important; }
-.nav-item > .icon-progress { color: #35dfbf !important; }
-.nav-item > .icon-alphabet { color: #18b8ee !important; }
-.nav-item > .icon-sending { color: #ff9b19 !important; }
-.nav-item > .icon-settings { color: #becbd8 !important; }
-.nav-item > .icon-account { color: #d060f3 !important; }
 
 .nav-item > .nav-label {
   width: auto;
