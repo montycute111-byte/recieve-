@@ -377,6 +377,20 @@ html[data-theme="dark"] .account-message.error {
   overflow: hidden;
 }
 
+.progression-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.progression-chip img {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 1.5rem;
+  object-fit: contain;
+}
+
 @media (max-width: 620px) {
   .app-shell {
     padding-bottom: calc(74px + env(safe-area-inset-bottom));

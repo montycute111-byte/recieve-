@@ -672,8 +672,8 @@
     const info = getLevelInfo();
     const streak = state.progression.practiceStreak;
     const values = {
-      "compact-streak": `🔥 ${streak.current}-Day Streak`,
-      "compact-level": `⭐ Level ${info.level}`,
+      "compact-streak-label": `${streak.current}-Day Streak`,
+      "compact-level-label": `Level ${info.level}`,
       "compact-xp": `${Math.round(info.currentXp).toLocaleString()} / ${info.requiredXp.toLocaleString()} XP`,
       "stats-level": `Level ${info.level}`,
       "stats-xp": `${Math.round(info.currentXp).toLocaleString()} / ${info.requiredXp.toLocaleString()} XP`,
