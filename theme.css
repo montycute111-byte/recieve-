@@ -392,6 +392,12 @@ html[data-theme="dark"] .account-message.error {
 }
 
 @media (max-width: 620px) {
+  html,
+  body {
+    touch-action: manipulation;
+    overscroll-behavior-x: none;
+  }
+
   .app-shell {
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
