@@ -365,6 +365,7 @@
 
 .stats-section {
   min-width: 0;
+  padding: 1.1rem 1.2rem 1.2rem;
   margin-top: 1rem;
 }
 
@@ -680,6 +681,10 @@
 
   .stats-hero .progression-bar {
     min-width: 0;
+  }
+
+  .stats-section {
+    padding: 0.95rem;
   }
 
   .stats-section > .section-heading {
