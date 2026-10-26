@@ -1101,7 +1101,7 @@
     for (let index = 0; index < Math.min(expected.length, actual.length); index += 1) {
       if (expected[index] === actual[index]) matches += 1;
     }
-    const accuracy = Math.round((matches / maxLength) * 100);
+    const accuracy = Math.max(0, Math.min(100, Math.round((matches / maxLength) * 100)));
     lastAnswerCorrect = expected === actual;
     awaitingNext = true;
     $("score-label").textContent = `${accuracy}% accurate`;

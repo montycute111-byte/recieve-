@@ -535,7 +535,7 @@
     ensureDaily();
     const expected = String(detail.expected || "");
     const actual = String(detail.actual || "");
-    const accuracy = Number(detail.accuracy) || 0;
+    const accuracy = Math.max(0, Math.min(100, Number(detail.accuracy) || 0));
     const maxLength = Math.max(Number(detail.maxLength) || expected.length, 1);
     const exact = accuracy === 100 && expected === actual;
     const matches = Math.max(0, Number(detail.matches) || (exact ? maxLength : 0));
@@ -648,7 +648,7 @@
   }
 
   function percentage(points, characters) {
-    return characters ? Math.round((points / characters) * 100) : 0;
+    return characters ? Math.max(0, Math.min(100, Math.round((points / characters) * 100))) : 0;
   }
 
   function renderProgression() {

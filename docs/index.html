@@ -21,7 +21,6 @@
         <button class="nav-item active" data-view="practice"><span>◉</span>Practice</button>
         <button class="nav-item" data-view="listen-only"><span>◌</span>Zen Mode</button>
         <button class="nav-item" data-view="progress"><span>✦</span>Progress</button>
-        <button class="nav-item" data-view="stats"><span>◒</span>Statistics</button>
         <button class="nav-item" data-view="alphabet"><span>⌘</span>Morse Code Alphabet</button>
         <button class="nav-item" data-view="sending"><span>➤</span>Sending</button>
         <button class="nav-item" data-view="settings"><span>⚙</span>Settings</button>
@@ -119,15 +118,6 @@
 
       </section>
 
-      <section class="view" id="stats-view" aria-labelledby="stats-title">
-        <header class="page-header"><div><p class="eyebrow">PERSONAL PROGRESS</p><h1 id="stats-title">Statistics</h1><p>See how your Morse reception is improving over time.</p></div><div class="profile-pill"><span class="status-dot"></span><span>Personal Stats</span></div></header>
-        <section class="panel stats-hero"><div><p class="eyebrow">CURRENT LEVEL</p><h2 id="stats-level">Level 1</h2><strong id="stats-xp">0 / 100 XP</strong><div class="progression-bar"><i id="stats-xp-bar"></i></div></div><div class="stats-hero-total"><span>Lifetime XP</span><strong id="stats-xp-total">0</strong></div></section>
-        <section class="stats-overview-grid" aria-label="Overview statistics"><article class="panel stat-card"><span>🔥 Current streak</span><strong id="stats-streak">0 days</strong></article><article class="panel stat-card"><span>Longest streak</span><strong id="stats-longest-streak">0 days</strong></article><article class="panel stat-card"><span>Exercises completed</span><strong id="stats-exercises">0</strong></article><article class="panel stat-card"><span>Correct answers</span><strong id="stats-correct">0</strong></article><article class="panel stat-card"><span>Overall accuracy</span><strong id="stats-accuracy">0%</strong></article><article class="panel stat-card"><span>Total practice time</span><strong id="stats-practice-time">0s</strong></article><article class="panel stat-card"><span>Practice days</span><strong id="stats-practice-days">0</strong></article></section>
-        <section class="panel stats-section"><div class="section-heading"><div><p class="eyebrow">PERFORMANCE</p><h2>By exercise type</h2></div></div><div id="category-stats-grid" class="category-stats-grid"></div></section>
-        <section class="panel stats-section"><div class="section-heading"><div><p class="eyebrow">SPEED</p><h2>WPM performance</h2></div><strong>Highest at 90%+: <span id="highest-wpm">—</span></strong></div><div id="wpm-stats-grid" class="wpm-stats-grid"></div></section>
-        <section class="panel stats-section charts-section"><div class="section-heading"><div><p class="eyebrow">TRENDS</p><h2>Practice activity</h2></div><div class="chart-range" role="group" aria-label="Chart range"><button type="button" data-stats-range="7" class="active">7 days</button><button type="button" data-stats-range="30">30 days</button><button type="button" data-stats-range="all">All time</button></div></div><p class="muted" id="stats-range-label">Last 7 days</p><div class="stats-chart-grid"><article class="chart-card"><h3>XP earned</h3><div id="xp-chart"></div></article><article class="chart-card"><h3>Accuracy</h3><div id="accuracy-chart"></div></article><article class="chart-card"><h3>Exercises per day</h3><div id="activity-chart"></div></article><article class="chart-card"><h3>Correct answers per day</h3><div id="exercise-chart"></div></article></div></section>
-      </section>
-
       <section class="view" id="account-view" aria-labelledby="account-title">
         <header class="page-header"><div><p class="eyebrow">ACCOUNT &amp; CLOUD SAVE</p><h1 id="account-title">Your Account</h1><p>Sign in to keep your Morse progress available on every device.</p></div><div class="profile-pill"><span class="status-dot"></span><span>Cloud Sync</span></div></header>
         <section class="account-bar panel" aria-label="Account and cloud saving">
@@ -162,8 +152,8 @@
   </div>
   <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=25"></script>
-  <script src="app.js?v=39"></script>
+  <script src="rpg.js?v=26"></script>
+  <script src="app.js?v=40"></script>
   <script type="module" src="firebase.js?v=3"></script>
 </body>
 </html>
