@@ -89,7 +89,7 @@
 
   const $ = (id) => document.getElementById(id);
   const state = loadState();
-  let activeExercise = { id: `initial-${Date.now()}`, mode: "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false, statsRecorded: false, xpAwarded: false };
+  let activeExercise = { id: `initial-${Date.now()}`, mode: "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false, transmissionFinished: false, statsRecorded: false, xpAwarded: false };
   let toastTimer = 0;
   let cloudUser = null;
   let cloudReady = false;
@@ -121,12 +121,9 @@
   }
 
   function loadState() {
-    try {
-      const saved = JSON.parse(window.localStorage?.getItem(STORAGE_KEY) || "null");
-      return saved && typeof saved === "object" ? normalizeState(saved) : defaultState();
-    } catch (_) {
-      return defaultState();
-    }
+    // Progress is intentionally temporary for signed-out users. Authenticated
+    // progress is loaded explicitly by Firebase after sign-in.
+    return defaultState();
   }
 
   function saveState() {
@@ -135,7 +132,6 @@
 
   async function saveProgressNow() {
     if (!cloudUser || !cloudReady || !window.morseCloud) return false;
-    window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(state));
     await window.morseCloud.saveProgress(cloudUser.uid, state);
     progressDirty = false;
     return true;
@@ -242,8 +238,34 @@
     return { words: 0, sentences: 0, perfectSentences: 0, noRewindSentences: 0, characters: 0, practiceMinutes: 0, practiceMs: 0, halloweenWords: 0, halloweenSentences: 0, halloweenPerfectSentences: 0 };
   }
 
+  function syncQualifiedStreak(awardMilestone = false) {
+    const daily = state.daily;
+    const streak = state.progression.practiceStreak;
+    const previousDate = streak.lastPracticeDate;
+    const current = Number(daily.currentStreak) || 0;
+    streak.current = current;
+    streak.longest = Number(daily.longestStreak) || 0;
+    streak.activeDays = Number(daily.successfulDays) || 0;
+    streak.lastPracticeDate = daily.lastQualifiedDate || "";
+    if (!current) {
+      streak.streakStartDate = "";
+      streak.claimedMilestones = [];
+      return 0;
+    }
+    if (current === 1 || (!streak.streakStartDate && previousDate !== streak.lastPracticeDate)) {
+      streak.streakStartDate = streak.lastPracticeDate;
+      streak.claimedMilestones = [];
+    }
+    if (!awardMilestone) return 0;
+    const milestone = current >= 30 && current % 30 === 0 ? current : [3, 7, 14].find((value) => value === current) || 0;
+    const reward = milestone === 3 ? 25 : milestone === 7 ? 75 : milestone === 14 ? 150 : milestone >= 30 ? 300 : 0;
+    if (!reward || streak.claimedMilestones.includes(milestone)) return 0;
+    streak.claimedMilestones.push(milestone);
+    return awardXp(reward, `${milestone}-day streak`, `streak:${streak.streakStartDate}:${milestone}`);
+  }
+
   function qualifyToday() {
-    if (state.daily.qualified) return;
+    if (state.daily.qualified) return 0;
     const today = state.daily.date || todayKey();
     const previous = state.daily.lastQualifiedDate;
     state.daily.currentStreak = previous && daysBetween(previous, today) === 1 ? state.daily.currentStreak + 1 : 1;
@@ -252,17 +274,11 @@
     state.daily.lastQualifiedDate = today;
     state.daily.qualified = true;
     showRpgToast(`STREAK DAY COMPLETE! ${state.daily.currentStreak} day${state.daily.currentStreak === 1 ? "" : "s"}`, true);
+    return syncQualifiedStreak(true);
   }
 
   function ensureDaily() {
     const date = todayKey();
-    const streak = state.progression.practiceStreak;
-    if (streak.lastPracticeDate && daysBetween(streak.lastPracticeDate, date) > 1 && streak.current) {
-      streak.current = 0;
-      streak.streakStartDate = "";
-      streak.claimedMilestones = [];
-      markDirty();
-    }
     if (state.daily.date !== date) {
       const previousDate = state.daily.date;
       if (previousDate && (!state.daily.qualified || daysBetween(previousDate, date) > 1)) state.daily.currentStreak = 0;
@@ -281,6 +297,7 @@
       state.daily.allQuestsXpAwarded = false;
       saveState();
     }
+    syncQualifiedStreak();
   }
 
   function escapeHtml(value) {
@@ -365,30 +382,6 @@
     return value;
   }
 
-  function recordPracticeDay() {
-    const streak = state.progression.practiceStreak;
-    const date = todayKey();
-    if (streak.lastPracticeDate === date) return { xp: 0, milestone: 0 };
-    const consecutive = streak.lastPracticeDate && daysBetween(streak.lastPracticeDate, date) === 1;
-    streak.current = consecutive ? streak.current + 1 : 1;
-    streak.longest = Math.max(streak.longest, streak.current);
-    streak.lastPracticeDate = date;
-    streak.activeDays += 1;
-    if (!consecutive) {
-      streak.streakStartDate = date;
-      streak.claimedMilestones = [];
-    }
-    const milestone = streak.current >= 30 && streak.current % 30 === 0 ? streak.current : [3, 7, 14].find((value) => value === streak.current) || 0;
-    const reward = milestone === 3 ? 25 : milestone === 7 ? 75 : milestone === 14 ? 150 : milestone >= 30 ? 300 : 0;
-    let xp = 0;
-    if (reward && !streak.claimedMilestones.includes(milestone)) {
-      streak.claimedMilestones.push(milestone);
-      xp = awardXp(reward, `${milestone}-day streak`, `streak:${streak.streakStartDate}:${milestone}`);
-    }
-    markDirty();
-    return { xp, milestone };
-  }
-
   function recordGradedActivity(detail, exact, matches, maxLength) {
     const progression = state.progression;
     const levelBefore = getLevelInfo().level;
@@ -414,7 +407,6 @@
     activity.correct += exact ? 1 : 0;
     activity.accuracyPoints += accuracy * maxLength;
     activity.characters += maxLength;
-    const streak = recordPracticeDay();
     let xp = 0;
     if (!activeExercise.xpAwarded) {
       xp += awardXp(exerciseXp(detail.mode, matches, exact), exact ? "Perfect exercise" : "Correct characters", `exercise:${activeExercise.id}`);
@@ -427,7 +419,7 @@
     category.xpEarned += xp;
     activeExercise.statsRecorded = true;
     markDirty();
-    return { xp: xp + streak.xp, levelBefore, levelAfter: getLevelInfo(), streak };
+    return { xp, levelBefore, levelAfter: getLevelInfo() };
   }
 
   function showXpToast(amount) {
@@ -491,6 +483,7 @@
   }
 
   function recordPracticeTime(detail = {}) {
+    if (detail.channel !== "practice") return;
     if (!activeExercise.playStartedAt) return;
     const elapsed = Math.max(0, Date.now() - activeExercise.playStartedAt);
     activeExercise.playStartedAt = 0;
@@ -522,7 +515,7 @@
       state.daily.allQuestsXpAwarded = true;
       earned += awardXp(50, "All daily quests", `all-quests:${state.daily.date}`);
     }
-    if (state.daily.completed.length >= 3) qualifyToday();
+    if (state.daily.completed.length >= 3) earned += qualifyToday();
     saveState();
     renderDaily();
     return earned;
@@ -534,6 +527,7 @@
       return;
     }
     if (activeExercise.revealed || activeExercise.rewarded) return;
+    if (!activeExercise.transmissionFinished) return;
     // The score event carries the authoritative mode. This keeps rewards working
     // even if the initial exercise-start event was missed during script loading.
     const exerciseMode = String(detail.mode || activeExercise.mode || "letters");
@@ -754,18 +748,23 @@
 
   function bindEvents() {
     window.addEventListener("morse:exercise-start", (event) => {
-      activeExercise = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, mode: event.detail.mode || "letters", themeId: event.detail.themeId || "", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false, statsRecorded: false, xpAwarded: false };
+      activeExercise = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, mode: event.detail.mode || "letters", themeId: event.detail.themeId || "", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false, transmissionFinished: false, statsRecorded: false, xpAwarded: false };
     });
-    window.addEventListener("morse:playback-start", () => {
+    window.addEventListener("morse:playback-start", (event) => {
+      if (event.detail?.channel !== "practice") return;
       if (!activeExercise.playStartedAt) activeExercise.playStartedAt = Date.now();
     });
-    window.addEventListener("morse:playback-stop", (event) => recordPracticeTime(event.detail));
+    window.addEventListener("morse:playback-stop", (event) => {
+      if (event.detail?.channel === "practice" && event.detail.completed) activeExercise.transmissionFinished = true;
+      recordPracticeTime(event.detail);
+    });
     window.addEventListener("morse:rewind", () => {
       activeExercise.rewinds += 1;
       state.totalRewinds += 1;
       saveState();
     });
     window.addEventListener("morse:pause", () => { activeExercise.pauses += 1; });
+    window.addEventListener("morse:reveal", () => { activeExercise.revealed = true; });
     window.addEventListener("morse:score", (event) => handleScore(event.detail));
     document.querySelectorAll("[data-stats-range]").forEach((button) => button.addEventListener("click", () => {
       selectedStatsRange = button.dataset.statsRange === "all" ? "all" : Number(button.dataset.statsRange);

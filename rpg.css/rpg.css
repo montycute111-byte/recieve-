@@ -431,6 +431,31 @@
   font-size: 0.78rem;
 }
 
+.revealed-answer {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 0.8rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #e8c984;
+  border-radius: 0.7rem;
+  color: #765b25;
+  background: #fffaf0;
+}
+
+.revealed-answer strong {
+  color: #765b25;
+  font-size: 0.78rem;
+}
+
+.revealed-answer span {
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1rem;
+  font-weight: 750;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+}
+
 .chart-range {
   display: flex;
   flex-wrap: wrap;

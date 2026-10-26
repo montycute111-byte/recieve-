@@ -85,6 +85,8 @@
   let exerciseThemeId = "";
   let exerciseGeneration = 0;
   let lastAnswerCorrect = false;
+  let exerciseRevealed = false;
+  let transmissionFinished = false;
   let awaitingNext = false;
   let listenExercise = "";
   let listenThemeId = "";
@@ -420,6 +422,8 @@
     }
     if (generation !== exerciseGeneration) return;
     playback.currentIndex = 0;
+    exerciseRevealed = false;
+    transmissionFinished = false;
     awaitingNext = false;
     updateProgress(0);
     setStatus(compactPositionLabel(0));
@@ -429,11 +433,14 @@
     $("answer-message").textContent = "";
     $("result").hidden = true;
     $("result").classList.remove("perfect-result");
+    $("revealed-answer").hidden = true;
+    $("revealed-answer").innerHTML = "";
+    $("reveal-button").disabled = false;
     $("continue-button").hidden = true;
     updateSummary();
     updateThemeSelectorVisibility();
     window.morseCurrentExercise = exercise;
-    notifyRpg("exercise-start", { mode, text: exercise, themeId: exerciseThemeId });
+    notifyRpg("exercise-start", { channel: "practice", mode, text: exercise, themeId: exerciseThemeId });
   }
 
   async function generateListenExercise() {
@@ -579,6 +586,7 @@
   }
 
   function armAnswerInput() {
+    if (exerciseRevealed) return;
     $("answer-input").readOnly = false;
   }
 
@@ -676,7 +684,7 @@
     $("pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     updateProgress(playback.currentIndex);
     setStatus(compactPositionLabel(playback.currentIndex));
-    notifyRpg("playback-start", { mode: $("mode-select").value });
+    notifyRpg("playback-start", { channel: "practice", mode: $("mode-select").value });
     try {
       await ensureAudio();
       if (settings.silenceBefore > 0) await sleep(Number(settings.silenceBefore) * 1000);
@@ -697,7 +705,8 @@
       }
       if (settings.silenceAfter > 0 && runId === playback.runId) await sleep(Number(settings.silenceAfter) * 1000);
       if (runId !== playback.runId) return;
-      notifyRpg("playback-stop", { mode: $("mode-select").value, completed: true });
+      transmissionFinished = true;
+      notifyRpg("playback-stop", { channel: "practice", mode: $("mode-select").value, completed: true });
       playback.active = false;
       playback.currentIndex = exercise.length;
       disarmAnswerInput();
@@ -711,7 +720,7 @@
       $("stop-button").disabled = true;
     } catch (error) {
       if (runId !== playback.runId) return;
-      notifyRpg("playback-stop", { mode: $("mode-select").value, completed: false });
+      notifyRpg("playback-stop", { channel: "practice", mode: $("mode-select").value, completed: false });
       playback.active = false;
       disarmAnswerInput();
       $("listening-window").classList.remove("is-playing");
@@ -784,7 +793,7 @@
   }
 
   function stopTransmission() {
-    notifyRpg("playback-stop", { mode: $("mode-select").value, completed: false });
+    notifyRpg("playback-stop", { channel: "practice", mode: $("mode-select").value, completed: false });
     playback.runId += 1;
     stopCurrentTone();
     playback.active = false;
@@ -900,7 +909,7 @@
     $("listen-pause-button").innerHTML = "Ⅱ <span>Pause</span>";
     updateListenProgress(listenPlayback.currentIndex);
     setListenStatus(compactListenPositionLabel(listenPlayback.currentIndex));
-    notifyRpg("playback-start", { mode: $("listen-mode-select").value });
+    notifyRpg("playback-start", { channel: "listen", mode: $("listen-mode-select").value });
     try {
       await ensureListenAudio();
       if (settings.silenceBefore > 0) await sleep(Number(settings.silenceBefore) * 1000);
@@ -919,7 +928,7 @@
       }
       if (settings.silenceAfter > 0 && runId === listenPlayback.runId) await sleep(Number(settings.silenceAfter) * 1000);
       if (runId !== listenPlayback.runId) return;
-      notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: true });
+      notifyRpg("playback-stop", { channel: "listen", mode: $("listen-mode-select").value, completed: true });
       listenPlayback.active = false;
       listenPlayback.currentIndex = listenExercise.length;
       listenAwaitingNext = true;
@@ -934,7 +943,7 @@
       $("listen-next-button").disabled = false;
     } catch (error) {
       if (runId !== listenPlayback.runId) return;
-      notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: false });
+      notifyRpg("playback-stop", { channel: "listen", mode: $("listen-mode-select").value, completed: false });
       listenPlayback.active = false;
       $("listen-listening-window").classList.remove("is-playing");
       setListenStatus(compactListenPositionLabel(Math.max(0, listenPlayback.currentIndex)));
@@ -1010,7 +1019,7 @@
   }
 
   function stopListenTransmission(keepNextButton = false) {
-    notifyRpg("playback-stop", { mode: $("listen-mode-select").value, completed: false });
+    notifyRpg("playback-stop", { channel: "listen", mode: $("listen-mode-select").value, completed: false });
     listenPlayback.runId += 1;
     stopListenTone();
     listenPlayback.active = false;
@@ -1051,6 +1060,7 @@
   }
 
   function scoreAnswer(source = "submit") {
+    if (source === "submit" && exerciseRevealed) return;
     const expected = exercise.trim().toUpperCase();
     const actual = $("answer-input").value.trim().toUpperCase().replace(/\s+/g, " ");
     const maxLength = Math.max(expected.length, actual.length, 1);
@@ -1062,35 +1072,45 @@
     lastAnswerCorrect = expected === actual;
     awaitingNext = true;
     $("score-label").textContent = `${accuracy}% accurate`;
-    $("answer-message").textContent = lastAnswerCorrect ? "Perfect copy." : "Review the revealed copy below.";
+    $("answer-message").textContent = lastAnswerCorrect
+      ? (transmissionFinished ? "Perfect copy." : "100% accurate — finish the transmission to record progress.")
+      : "Review your result below.";
     $("submit-button").disabled = true;
     $("continue-button").hidden = false;
-    $("result").classList.toggle("perfect-result", lastAnswerCorrect);
+    $("result").classList.toggle("perfect-result", lastAnswerCorrect && transmissionFinished);
     $("result").hidden = false;
-    const reward = lastAnswerCorrect ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
-    $("result").innerHTML = `${reward}<strong>Expected: ${escapeHtml(expected)}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
-    if (lastAnswerCorrect && source === "submit") {
+    const reward = lastAnswerCorrect && transmissionFinished ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
+    $("result").innerHTML = `${reward}<strong>Your copy: ${escapeHtml(actual || "—")}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
+    if (lastAnswerCorrect && transmissionFinished && source === "submit") {
       playPerfectCopySound();
       showToast("Perfect copy! Great work.");
     }
-    notifyRpg("score", { source, mode: $("mode-select").value, themeId: exerciseThemeId, accuracy, matches, maxLength, expected, actual });
+    notifyRpg("score", { source, channel: "practice", eligible: transmissionFinished, mode: $("mode-select").value, themeId: exerciseThemeId, accuracy, matches, maxLength, expected, actual });
   }
 
   function revealAnswer() {
-    $("answer-input").value = exercise;
-    $("submit-button").disabled = false;
-    scoreAnswer("reveal");
+    if (!exercise || exerciseRevealed) return;
+    exerciseRevealed = true;
+    disarmAnswerInput();
+    $("submit-button").disabled = true;
+    $("reveal-button").disabled = true;
+    $("continue-button").hidden = false;
+    $("answer-message").textContent = "Answer revealed.";
+    $("revealed-answer").innerHTML = `<strong>Answer revealed.</strong><span>${escapeHtml(exercise.trim().toUpperCase())}</span>`;
+    $("revealed-answer").hidden = false;
+    notifyRpg("reveal", { channel: "practice", mode: $("mode-select").value, themeId: exerciseThemeId });
   }
 
   async function continueToNext() {
     if (!awaitingNext) return;
     awaitingNext = false;
     stopTransmission();
-    if (settings.repeatCorrect && !lastAnswerCorrect) {
+    if (settings.repeatCorrect && !lastAnswerCorrect && !exerciseRevealed) {
       $("answer-input").value = "";
       $("score-label").textContent = "";
       $("answer-message").textContent = "Try the same transmission again.";
       $("result").hidden = true;
+      $("revealed-answer").hidden = true;
       $("continue-button").hidden = true;
       startTransmission();
       return;
@@ -1141,7 +1161,7 @@
         input.value = uppercaseValue;
         input.setSelectionRange(selectionStart, selectionEnd);
       }
-      $("submit-button").disabled = !input.value.trim();
+      $("submit-button").disabled = exerciseRevealed || !input.value.trim();
     });
     $("submit-button").addEventListener("click", () => scoreAnswer("submit"));
     $("reveal-button").addEventListener("click", revealAnswer);

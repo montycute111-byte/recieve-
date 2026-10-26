@@ -8,7 +8,7 @@
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
-  <link rel="stylesheet" href="rpg.css?v=19">
+  <link rel="stylesheet" href="rpg.css?v=20">
 </head>
 <body>
   <div class="app-shell">
@@ -67,7 +67,7 @@
           <div class="card-heading"><div><h2>Your copy</h2><p class="muted">Click here to type while you listen.</p></div><strong id="score-label"></strong></div>
           <textarea id="answer-input" rows="4" placeholder="Click to enter your copy…" spellcheck="false" readonly></textarea>
           <div class="answer-actions"><button class="primary" id="submit-button" disabled>✓ Submit Answer</button><button id="reveal-button">◉ Reveal Answer</button><button class="primary continue-button" id="continue-button" hidden>Next →</button><span class="answer-message" id="answer-message"></span></div>
-          <div class="result" id="result" hidden></div>
+          <div class="result" id="result" hidden></div><div class="revealed-answer" id="revealed-answer" hidden></div>
         </section>
 
       </section>
@@ -131,7 +131,7 @@
       <section class="view" id="account-view" aria-labelledby="account-title">
         <header class="page-header"><div><p class="eyebrow">ACCOUNT &amp; CLOUD SAVE</p><h1 id="account-title">Your Account</h1><p>Sign in to keep your Morse progress available on every device.</p></div><div class="profile-pill"><span class="status-dot"></span><span>Cloud Sync</span></div></header>
         <section class="account-bar panel" aria-label="Account and cloud saving">
-          <div class="account-bar-copy"><div class="account-badge" aria-hidden="true">☁</div><div><p class="eyebrow">SYNC YOUR TRAINING</p><h2>Keep your progress with you</h2><p>Progress saves only when you press Save Progress.</p></div></div>
+          <div class="account-bar-copy"><div class="account-badge" aria-hidden="true">☁</div><div><p class="eyebrow">SYNC YOUR TRAINING</p><h2>Keep your progress with you</h2><p id="account-save-copy">Signed out: progress is temporary. Sign in to save it.</p></div></div>
           <div id="auth-signed-out" class="account-form"><label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters"></label><div class="auth-actions"><button type="button" class="primary" id="auth-sign-in">Sign in</button><button type="button" id="auth-sign-up">Create account</button></div></div>
           <div id="auth-signed-in" class="account-form" hidden><p class="account-signed-in-copy">Signed in as <strong id="auth-user-label"></strong><span>Press Save Progress when you want to sync.</span></p><div class="auth-actions"><button type="button" class="primary" id="auth-save-progress">Save Progress</button><button type="button" id="auth-sign-out">Sign out</button></div></div>
           <p class="account-message" id="auth-message" role="status"></p>
@@ -155,15 +155,15 @@
         <div class="panel settings-form">
           <div class="setting-section"><h2>CW timing</h2><label>Character speed <output id="character-wpm-value">5 WPM</output><input id="character-wpm" type="range" min="1" max="40" value="5"></label><label>Effective speed <output id="effective-wpm-value">5 WPM</output><input id="effective-wpm" type="range" min="1" max="40" value="5"></label><label>Tone frequency <output id="frequency-value">699 Hz</output><input id="frequency" type="range" min="300" max="1000" value="699"></label><label>Volume <output id="volume-value">62%</output><input id="volume" type="range" min="0" max="100" value="62"></label><button id="reset-settings">Reset to Standard Timing</button></div>
           <div class="setting-section"><h2>Exercise behavior</h2><label class="toggle-row"><span>Countdown before transmission</span><input id="countdown-setting" type="checkbox" checked></label><label class="toggle-row"><span>Repeat until decoded correctly</span><input id="repeat-correct" type="checkbox"></label><label>Silence before <output id="before-value">0.7s</output><input id="silence-before" type="range" min="0" max="3" step="0.1" value="0.7"></label><label>Silence after <output id="after-value">0.7s</output><input id="silence-after" type="range" min="0" max="3" step="0.1" value="0.7"></label></div>
-          <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Your settings and progress stay in this browser on this device.</p></div>
+          <div class="setting-section"><h2>Profile</h2><label>Profile name<input id="profile-name" type="text" value="Operator"></label><p class="muted">Settings are saved separately on this device. Progress is temporary until you sign in and press Save Progress.</p></div>
         </div>
       </section>
     </main>
   </div>
   <div class="rpg-toast" id="rpg-toast" role="status" aria-live="polite"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=21"></script>
-  <script src="app.js?v=38"></script>
-  <script type="module" src="firebase.js?v=2"></script>
+  <script src="rpg.js?v=22"></script>
+  <script src="app.js?v=39"></script>
+  <script type="module" src="firebase.js?v=3"></script>
 </body>
 </html>

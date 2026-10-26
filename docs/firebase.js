@@ -95,6 +95,9 @@ function renderAccount(user) {
   if (signedOut) signedOut.hidden = Boolean(user);
   if (signedIn) signedIn.hidden = !user;
   if (user && $("auth-user-label")) $("auth-user-label").textContent = user.email || "your account";
+  if ($("account-save-copy")) $("account-save-copy").textContent = user
+    ? "Signed in: cloud progress saves when you press Save Progress."
+    : "Signed out: progress is temporary. Sign in to save it.";
   const saveButton = $("auth-save-progress");
   if (saveButton) saveButton.disabled = true;
 }
