@@ -142,6 +142,11 @@
     return mode === "random-letters";
   }
 
+  function randomLettersLength(selectId) {
+    const length = Number($(selectId)?.value);
+    return [5, 10, 15].includes(length) ? length : DEFAULT_EXERCISE_GROUP_SIZE;
+  }
+
   function isThemedPracticeMode(mode) {
     return isThemedSentenceMode(mode) || isThemedWordMode(mode);
   }
@@ -268,6 +273,8 @@
     const listenVisible = isThemedPracticeMode($("listen-mode-select").value);
     if ($("practice-theme-selector")) $("practice-theme-selector").hidden = !practiceVisible;
     if ($("listen-theme-selector")) $("listen-theme-selector").hidden = !listenVisible;
+    if ($("practice-length-control")) $("practice-length-control").hidden = !isRandomLettersMode($("mode-select").value);
+    if ($("listen-length-control")) $("listen-length-control").hidden = !isRandomLettersMode($("listen-mode-select").value);
   }
 
   function handleThemeChange(event) {
@@ -395,7 +402,7 @@
   async function generateExercise() {
     const generation = ++exerciseGeneration;
     const mode = $("mode-select").value;
-    const group = DEFAULT_EXERCISE_GROUP_SIZE;
+    const group = isRandomLettersMode(mode) ? randomLettersLength("group-size-select") : DEFAULT_EXERCISE_GROUP_SIZE;
     exerciseThemeId = "";
     if (mode === "numbers") {
       exercise = randomSequence(NUMBERS, group, `${mode}:${group}`);
@@ -463,7 +470,7 @@
   async function generateListenExercise() {
     const generation = ++listenGeneration;
     const mode = $("listen-mode-select").value;
-    const group = DEFAULT_EXERCISE_GROUP_SIZE;
+    const group = isRandomLettersMode(mode) ? randomLettersLength("listen-group-size-select") : DEFAULT_EXERCISE_GROUP_SIZE;
     listenThemeId = "";
     if (mode === "numbers") {
       listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
@@ -525,13 +532,13 @@
 
   function updateSummary() {
     const mode = $("mode-select").value;
-    const exerciseType = isSentenceMode() ? "Sentence" : isWordMode() ? "Phrase" : isRandomLettersMode(mode) ? "Random letters" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = isSentenceMode() ? "Sentence" : isWordMode() ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateListenSummary() {
     const mode = $("listen-mode-select").value;
-    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : ["phrases", "halloween"].includes(mode) ? "Phrase" : isRandomLettersMode(mode) ? "Random letters" : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : ["phrases", "halloween"].includes(mode) ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("listen-group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("listen-summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
@@ -1142,6 +1149,7 @@
   function bindEvents() {
     document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
     $("mode-select").addEventListener("change", () => { renderThemeSelectors(); generateExercise(); });
+    $("group-size-select").addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
     $("start-button").addEventListener("click", startTransmission);
     $("replay-button").addEventListener("click", () => { stopTransmission(); playFrom(0); });
@@ -1149,6 +1157,7 @@
     $("pause-button").addEventListener("click", togglePause);
     $("stop-button").addEventListener("click", stopTransmission);
     $("listen-mode-select").addEventListener("change", () => { renderThemeSelectors(); changeListenExercise(); });
+    $("listen-group-size-select").addEventListener("change", changeListenExercise);
     $("listen-session-select").addEventListener("change", () => showToast($("listen-session-select").value === "0" ? "Unlimited session selected" : `${$("listen-session-select").value}-minute session selected`));
     $("listen-start-button").addEventListener("click", startListenTransmission);
     $("listen-replay-button").addEventListener("click", () => { stopListenTransmission(true); playListenFrom(0); });
