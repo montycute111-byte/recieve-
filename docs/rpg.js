@@ -497,7 +497,7 @@
     if (!toast) return;
     toast.classList.remove("prominent", "accuracy-reward", "xp-reward", "level-up", "show");
     toast.classList.add("accuracy-reward");
-    toast.innerHTML = `<span class="accuracy-toast-kicker">✦ PERFECT COPY ✦</span><strong class="accuracy-toast-amount">100% ACCURACY</strong><span class="accuracy-toast-label">Clean transmission</span>`;
+    toast.innerHTML = "<span class=\"accuracy-toast-kicker\"><span class=\"icon-svg inline-icon icon-sparkle\" aria-hidden=\"true\"></span> PERFECT COPY <span class=\"icon-svg inline-icon icon-sparkle\" aria-hidden=\"true\"></span></span><strong class=\"accuracy-toast-amount\">100% ACCURACY</strong><span class=\"accuracy-toast-label\">Clean transmission</span>";
     window.clearTimeout(toastTimer);
     window.requestAnimationFrame(() => toast.classList.add("show"));
     toastTimer = window.setTimeout(() => toast.classList.remove("show"), 3400);
@@ -624,7 +624,7 @@
     container.innerHTML = THEME_META.map((theme) => {
       const count = Math.min(500, state.themeProgress[theme.id]?.completed.length || 0);
       const percentage = (count / 500) * 100;
-      return `<article class="theme-progress-card"><div class="theme-progress-icon"><img src="assets/theme-icons/${theme.icon}.png?v=1" alt=""></div><div class="theme-progress-copy"><div class="theme-progress-title"><strong>${escapeHtml(theme.name)}</strong><span>${count} / 500</span></div><div class="challenge-progress"><i style="width:${percentage}%"></i></div><small>${count === 500 ? "Library mastered" : `${500 - count} sentences remaining`}</small></div></article>`;
+      return `<article class="theme-progress-card"><div class="theme-progress-icon"><span class="icon-svg icon-${theme.icon}" aria-hidden="true"></span></div><div class="theme-progress-copy"><div class="theme-progress-title"><strong>${escapeHtml(theme.name)}</strong><span>${count} / 500</span></div><div class="challenge-progress"><i style="width:${percentage}%"></i></div><small>${count === 500 ? "Library mastered" : `${500 - count} sentences remaining`}</small></div></article>`;
     }).join("");
   }
 
@@ -649,7 +649,7 @@
     const raw = Number(state.daily.progress[quest.metric] || 0);
     const progress = Math.min(quest.target, raw);
     const complete = state.daily.completed.includes(quest.id);
-    return `<article class="challenge-card quest-card${complete ? " complete" : ""}"><div class="challenge-icon"><img src="assets/quest-icon.png?v=2" alt=""></div><div class="challenge-copy"><div class="quest-title-row"><strong>${escapeHtml(quest.title)}</strong></div><span>${escapeHtml(quest.description)}</span><div class="challenge-progress"><i style="width:${(progress / quest.target) * 100}%"></i></div><small>${progress} / ${quest.target}${complete ? " · Complete" : ""}</small></div></article>`;
+    return `<article class="challenge-card quest-card${complete ? " complete" : ""}"><div class="challenge-icon"><span class="icon-svg icon-star" aria-hidden="true"></span></div><div class="challenge-copy"><div class="quest-title-row"><strong>${escapeHtml(quest.title)}</strong></div><span>${escapeHtml(quest.description)}</span><div class="challenge-progress"><i style="width:${(progress / quest.target) * 100}%"></i></div><small>${progress} / ${quest.target}${complete ? " · Complete" : ""}</small></div></article>`;
   }
 
   function renderDaily() {

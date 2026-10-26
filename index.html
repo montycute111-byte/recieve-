@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
   <link rel="stylesheet" href="rpg.css/rpg.css?v=25">
+  <link rel="stylesheet" href="icon-overrides.css?v=1">
   <link rel="stylesheet" href="theme.css?v=3">
   <script src="theme.js?v=1"></script>
 </head>
@@ -21,13 +22,13 @@
       </div>
       <button class="mobile-nav-toggle" id="mobile-nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="primary-navigation"><span></span><span></span><span></span></button>
       <nav class="side-nav" id="primary-navigation" aria-label="Primary navigation">
-        <button class="nav-item active" data-view="practice"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/practice.png?v=6" alt=""></span><span class="nav-label">Practice</span></button>
-        <button class="nav-item" data-view="listen-only"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/zen.png?v=6" alt=""></span><span class="nav-label">Zen Mode</span></button>
-        <button class="nav-item" data-view="progress"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/progress.png?v=6" alt=""></span><span class="nav-label">Progress</span></button>
+        <button class="nav-item active" data-view="practice"><span class="nav-icon" aria-hidden="true"><span class="icon-svg icon-target"></span></span><span class="nav-label">Practice</span></button>
+        <button class="nav-item" data-view="listen-only"><span class="nav-icon" aria-hidden="true"><span class="icon-svg icon-flower-lotus"></span></span><span class="nav-label">Zen Mode</span></button>
+        <button class="nav-item" data-view="progress"><span class="nav-icon" aria-hidden="true"><span class="icon-svg icon-chart-bar"></span></span><span class="nav-label">Progress</span></button>
         <button class="nav-item" data-view="alphabet"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/alphabet.png?v=6" alt=""></span><span class="nav-label">Morse Code Alphabet</span></button>
-        <button class="nav-item" data-view="sending"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/sending.png?v=6" alt=""></span><span class="nav-label">Sending</span></button>
-        <button class="nav-item" data-view="settings"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/settings.png?v=7" alt=""></span><span class="nav-label">Settings</span></button>
-        <button class="nav-item" data-view="account"><span class="nav-icon" aria-hidden="true"><img src="assets/nav-icons/account.png?v=6" alt=""></span><span class="nav-label">Account</span></button>
+        <button class="nav-item" data-view="sending"><span class="nav-icon" aria-hidden="true"><span class="icon-svg icon-paper-plane-tilt"></span></span><span class="nav-label">Sending</span></button>
+        <button class="nav-item" data-view="settings"><span class="nav-icon" aria-hidden="true"><span class="icon-svg icon-gear"></span></span><span class="nav-label">Settings</span></button>
+        <button class="nav-item" data-view="account"><span class="nav-icon" aria-hidden="true"><span class="icon-svg icon-user-circle"></span></span><span class="nav-label">Account</span></button>
       </nav>
       <div class="sidebar-note">Train your ear one clean character at a time.</div>
     </aside>
@@ -116,7 +117,7 @@
       <section class="view" id="progress-view" aria-labelledby="progress-title">
         <header class="page-header"><div><p class="eyebrow">DAILY OBJECTIVES</p><h1 id="progress-title">Daily Quests</h1><p>Keep your daily Morse practice moving.</p></div><div class="profile-pill"><span class="status-dot"></span><span>Daily Quests</span></div></header>
 
-        <section class="panel progression-strip" aria-label="Your progression"><div class="progression-chip" id="compact-streak"><img src="assets/progression-icons/streak.png?v=1" alt=""><span id="compact-streak-label">0-Day Streak</span></div><div class="progression-chip" id="compact-level"><img src="assets/progression-icons/level.png?v=1" alt=""><span id="compact-level-label">Level 1</span></div><div class="progression-xp"><div><strong id="compact-xp">0 / 100 XP</strong><span>to next level</span></div><div class="progression-bar"><i id="compact-xp-bar"></i></div></div></section>
+        <section class="panel progression-strip" aria-label="Your progression"><div class="progression-chip" id="compact-streak"><span class="icon-svg icon-fire" aria-hidden="true"></span><span id="compact-streak-label">0-Day Streak</span></div><div class="progression-chip" id="compact-level"><span class="icon-svg icon-sparkle" aria-hidden="true"></span><span id="compact-level-label">Level 1</span></div><div class="progression-xp"><div><strong id="compact-xp">0 / 100 XP</strong><span>to next level</span></div><div class="progression-bar"><i id="compact-xp-bar"></i></div></div></section>
 
         <div>
           <section class="panel rpg-section daily-quest-panel" aria-labelledby="daily-title"><div class="section-heading"><div><p class="eyebrow">DAILY OBJECTIVES</p><h2 id="daily-title">Daily Quests</h2></div><span id="daily-date" class="muted"></span></div><div class="daily-quest-summary"><strong id="daily-quest-count">0/5 quests complete</strong><span id="daily-reset-countdown">Resets in --:--:--</span><span id="daily-streak-status">Complete 3 quests to qualify for today’s streak.</span></div><div class="quest-group"><div class="quest-group-label">Standard quests</div><div id="daily-quests-standard" class="challenge-list"></div></div><div class="quest-group"><div class="quest-group-label">Bonus quests</div><div id="daily-quests-bonus" class="challenge-list"></div></div></section>
@@ -129,7 +130,7 @@
       <section class="view" id="account-view" aria-labelledby="account-title">
         <header class="page-header"><div><p class="eyebrow">ACCOUNT &amp; CLOUD SAVE</p><h1 id="account-title">Your Account</h1><p>Sign in to keep your Morse progress available on every device.</p></div><div class="profile-pill"><span class="status-dot"></span><span>Cloud Sync</span></div></header>
         <section class="account-bar panel" aria-label="Account and cloud saving">
-          <div class="account-bar-copy"><div class="account-badge" aria-hidden="true"><img src="assets/account-icons/cloud-save.png?v=2" alt=""></div><div><p class="eyebrow">SYNC YOUR TRAINING</p><h2>Keep your progress with you</h2><p id="account-save-copy">Signed out: progress is temporary. Sign in to save it.</p></div></div>
+          <div class="account-bar-copy"><div class="account-badge" aria-hidden="true"><span class="icon-svg icon-cloud"></span></div><div><p class="eyebrow">SYNC YOUR TRAINING</p><h2>Keep your progress with you</h2><p id="account-save-copy">Signed out: progress is temporary. Sign in to save it.</p></div></div>
           <div id="auth-signed-out" class="account-form"><label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters"></label><div class="auth-actions"><button type="button" class="primary" id="auth-sign-in">Sign in</button><button type="button" id="auth-sign-up">Create account</button></div></div>
           <div id="auth-signed-in" class="account-form" hidden><p class="account-signed-in-copy">Signed in as <strong id="auth-user-label"></strong><span>Press Save Progress when you want to sync.</span></p><div class="auth-actions"><button type="button" class="primary" id="auth-save-progress">Save Progress</button><button type="button" id="auth-sign-out">Sign out</button></div></div>
           <p class="account-message" id="auth-message" role="status"></p>
@@ -163,7 +164,7 @@
   <div class="level-up-overlay" id="level-up-overlay" role="status" aria-live="polite" hidden>
     <div class="level-up-card">
       <div class="level-up-rays" aria-hidden="true"></div>
-      <div class="level-up-icon" aria-hidden="true">✦</div>
+      <div class="level-up-icon" aria-hidden="true"><span class="icon-svg icon-sparkle"></span></div>
       <span class="level-up-kicker">LEVEL UP</span>
       <strong class="level-up-number" id="level-up-level">LEVEL 2</strong>
       <span class="level-up-label">Your signal is getting stronger</span>

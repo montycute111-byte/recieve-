@@ -1,0 +1,51 @@
+/* The provided SVGs are used as masks so CSS can recolor their original shapes. */
+.icon-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  flex: 0 0 auto;
+  background: currentColor;
+  -webkit-mask: var(--icon-source) center / contain no-repeat;
+  mask: var(--icon-source) center / contain no-repeat;
+}
+
+.nav-item .icon-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.nav-item > .nav-icon { color: #64748b; }
+html[data-theme="dark"] .nav-item > .nav-icon { color: #cbd5e1; }
+html[data-theme="dark"] .nav-item.active > .nav-icon { color: #00e5ff; }
+
+.icon-target { --icon-source: url("assets/icons/target.svg"); }
+.icon-flower-lotus { --icon-source: url("assets/icons/flower-lotus.svg"); }
+.icon-chart-bar { --icon-source: url("assets/icons/chart-bar.svg"); }
+.icon-paper-plane-tilt { --icon-source: url("assets/icons/paper-plane-tilt.svg"); }
+.icon-gear { --icon-source: url("assets/icons/gear.svg"); }
+.icon-user-circle { --icon-source: url("assets/icons/user-circle.svg"); }
+.icon-joystick, .icon-video-games { --icon-source: url("assets/icons/joystick.svg"); }
+.icon-film-slate, .icon-movies-tv { --icon-source: url("assets/icons/film-slate.svg"); }
+.icon-chat-circle-dots, .icon-famous-quotes { --icon-source: url("assets/icons/chat-circle-dots.svg"); }
+.icon-smiley, .icon-jokes-riddles { --icon-source: url("assets/icons/smiley.svg"); }
+.icon-music-notes, .icon-music { --icon-source: url("assets/icons/music-notes.svg"); }
+.icon-pencil-line, .icon-general-sentences { --icon-source: url("assets/icons/pencil-line.svg"); }
+.icon-ghost, .icon-halloween { --icon-source: url("assets/icons/ghost.svg"); }
+.icon-cloud { --icon-source: url("assets/icons/cloud.svg"); }
+.icon-sparkle { --icon-source: url("assets/icons/sparkle.svg"); }
+.icon-star { --icon-source: url("assets/icons/star.svg"); }
+.icon-fire { --icon-source: url("assets/icons/fire.svg"); }
+
+.inline-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.14em;
+}
+
+.theme-option-icon .icon-svg { width: 1.75rem; height: 1.75rem; }
+.theme-progress-icon .icon-svg { width: 1.75rem; height: 1.75rem; }
+.challenge-icon .icon-svg { width: 1.35rem; height: 1.35rem; }
+.account-badge .icon-svg { width: 2rem; height: 2rem; color: #00e5ff; }
+.progression-chip .icon-svg { width: 1.35rem; height: 1.35rem; flex: 0 0 1.35rem; }
+.level-up-icon .icon-svg { width: 2rem; height: 2rem; }

@@ -212,7 +212,7 @@
     const checked = selectedThemes.includes(theme.id) ? " checked" : "";
     const detail = isThemedWordMode(mode) ? "1–4 word phrases" : "500 sentences";
     const name = theme.name;
-    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true"><img src="assets/theme-icons/${theme.icon}.png?v=1" alt=""></span><span><strong>${name}</strong><small>${detail}</small></span></label>`;
+    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true"><span class="icon-svg icon-${theme.icon}"></span></span><span><strong>${name}</strong><small>${detail}</small></span></label>`;
   }
 
   function updateThemeSelectorCopy() {
@@ -1112,7 +1112,7 @@
     $("continue-button").hidden = false;
     $("result").classList.toggle("perfect-result", lastAnswerCorrect && transmissionFinished);
     $("result").hidden = false;
-    const reward = lastAnswerCorrect && transmissionFinished ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
+    const reward = lastAnswerCorrect && transmissionFinished ? '<div class="reward-line"><span class="icon-svg inline-icon icon-sparkle" aria-hidden="true"></span> Perfect copy! Excellent work. <span class="icon-svg inline-icon icon-sparkle" aria-hidden="true"></span></div>' : "";
     $("result").innerHTML = `${reward}<strong>Your copy: ${escapeHtml(actual || "—")}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
     if (lastAnswerCorrect && transmissionFinished && source === "submit") {
       playPerfectCopySound();

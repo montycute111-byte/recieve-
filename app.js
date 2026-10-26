@@ -1094,7 +1094,7 @@
     $("continue-button").hidden = false;
     $("result").classList.toggle("perfect-result", lastAnswerCorrect && transmissionFinished);
     $("result").hidden = false;
-    const reward = lastAnswerCorrect && transmissionFinished ? '<div class="reward-line">✦ Perfect copy! Excellent work. ✦</div>' : "";
+    const reward = lastAnswerCorrect && transmissionFinished ? '<div class="reward-line"><span class="icon-svg inline-icon icon-sparkle" aria-hidden="true"></span> Perfect copy! Excellent work. <span class="icon-svg inline-icon icon-sparkle" aria-hidden="true"></span></div>' : "";
     $("result").innerHTML = `${reward}<strong>Your copy: ${escapeHtml(actual || "—")}</strong><span>${accuracy}% character accuracy · ${matches}/${maxLength} characters matched</span>`;
     if (lastAnswerCorrect && transmissionFinished && source === "submit") {
       playPerfectCopySound();
