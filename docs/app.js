@@ -338,16 +338,16 @@
 
   function positionLabel(index) {
     const safeIndex = Math.min(Math.max(0, index), Math.max(0, exercise.length - 1));
-    if (!isSentenceMode() && !isWordMode()) return `Letter ${letterNumber(safeIndex)} of ${letterCount(exercise)} letters`;
+    if (!isSentenceMode() && !isWordMode()) return `Letter ${letterNumber(safeIndex)} of ${letterCount(exercise)}`;
     const throughCurrent = exercise.slice(0, safeIndex + 1);
     const wordNumber = throughCurrent.trim().split(/\s+/).length;
     const wordStart = Math.max(0, throughCurrent.lastIndexOf(" ") + 1);
     const letterInWord = [...exercise.slice(wordStart, safeIndex + 1)].filter((char) => char !== " ").length;
-    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)} of ${letterCount(exercise)} letters`;
+    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)}`;
   }
 
   function compactPositionLabel(index) {
-    return positionLabel(index).replace(/ of \d+ letters$/, "");
+    return positionLabel(index).replace(/ of \d+$/, "");
   }
 
   function listenLetterNumber(index) {
@@ -359,17 +359,17 @@
     const safeIndex = Math.min(Math.max(0, index), Math.max(0, listenExercise.length - 1));
     const totalLetters = letterCount(listenExercise);
     if (!["sentences", "halloween-sentences", "phrases", "halloween"].includes(mode)) {
-      return `Letter ${listenLetterNumber(safeIndex)} of ${totalLetters} letters`;
+      return `Letter ${listenLetterNumber(safeIndex)} of ${totalLetters}`;
     }
     const throughCurrent = listenExercise.slice(0, safeIndex + 1);
     const wordNumber = throughCurrent.trim().split(/\s+/).length;
     const wordStart = Math.max(0, throughCurrent.lastIndexOf(" ") + 1);
     const letterInWord = [...listenExercise.slice(wordStart, safeIndex + 1)].filter((char) => char !== " ").length;
-    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)} of ${totalLetters} letters`;
+    return `Word ${wordNumber} · Letter ${Math.max(1, letterInWord)}`;
   }
 
   function compactListenPositionLabel(index) {
-    return listenPositionLabel(index).replace(/ of \d+ letters$/, "");
+    return listenPositionLabel(index).replace(/ of \d+$/, "");
   }
 
   async function generateExercise() {
@@ -1091,6 +1091,7 @@
   function revealAnswer() {
     if (!exercise || exerciseRevealed) return;
     exerciseRevealed = true;
+    awaitingNext = true;
     disarmAnswerInput();
     $("submit-button").disabled = true;
     $("reveal-button").disabled = true;
