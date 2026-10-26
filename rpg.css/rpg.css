@@ -1043,3 +1043,45 @@
     margin: 14px 0 10px;
   }
 }
+
+/* Keep the compact progression chips visually balanced with their icon sprites. */
+.progression-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.7rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.progression-chip img {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 1.35rem;
+  object-fit: contain;
+}
+
+@media (max-width: 620px) {
+  .progression-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.6rem;
+    padding: 0.75rem;
+  }
+
+  .progression-chip {
+    width: 100%;
+    min-width: 0;
+    padding: 0.6rem 0.55rem;
+    font-size: 0.75rem;
+  }
+
+  .progression-xp {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+  }
+}
