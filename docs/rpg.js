@@ -2,6 +2,15 @@
   "use strict";
 
   const STORAGE_KEY = "morseReceiveRpgProgress";
+  const THEME_META = [
+    { id: "video-games", icon: "🎮", name: "Video Games" },
+    { id: "movies-tv", icon: "🎬", name: "Movies & TV" },
+    { id: "famous-quotes", icon: "💬", name: "Famous Quotes" },
+    { id: "jokes-riddles", icon: "😂", name: "Jokes & Riddles" },
+    { id: "music", icon: "🎵", name: "Music" },
+    { id: "general-sentences", icon: "📝", name: "General Sentences" },
+    { id: "halloween", icon: "🎃", name: "Halloween" }
+  ];
   const STANDARD_QUESTS = [
     { id: "warm-up", title: "Warm-Up", description: "Decode 10 words correctly.", target: 10, metric: "words", group: "standard" },
     { id: "sentence-starter", title: "Sentence Starter", description: "Decode 10 sentences correctly.", target: 10, metric: "sentences", group: "standard" },
@@ -21,6 +30,27 @@
   ];
   const QUESTS = [...STANDARD_QUESTS, ...BONUS_QUESTS, ...SEASONAL_QUESTS];
   const REMOVED_QUEST_IDS = new Set(["perfect-copy", "clean-circuit", "perfect-run", "halloween-perfect"]);
+  const PROGRESSION_CATEGORIES = [
+    ["letters", "Letters"], ["random-letters", "Random Letters"], ["numbers", "Numbers"],
+    ["words", "Words"], ["sentences", "Sentences"], ["halloween-words", "Halloween Words"],
+    ["halloween-sentences", "Halloween Sentences"]
+  ];
+
+  function defaultProgression() {
+    return {
+      totalXp: 0,
+      totalExercisesCompleted: 0,
+      totalCorrectAnswers: 0,
+      totalIncorrectAnswers: 0,
+      claimedRewardIds: [],
+      xpRewardHistory: [],
+      dailyActivity: [],
+      practiceStreak: { current: 0, longest: 0, lastPracticeDate: "", activeDays: 0, streakStartDate: "", claimedMilestones: [] },
+      categoryStats: {},
+      wpmStats: {},
+      lastSessionRewardAt: 0
+    };
+  }
 
   const defaultState = () => ({
     perfectStreak: 0,
@@ -41,11 +71,14 @@
     perfectAt10: 0,
     totalQuestsCompleted: 0,
     halloweenQuestsCompleted: 0,
+    themeProgress: Object.fromEntries(THEME_META.map((theme) => [theme.id, { completed: [] }])),
+    progression: defaultProgression(),
     daily: {
       date: "",
       questIds: [],
       progress: { words: 0, sentences: 0, perfectSentences: 0, noRewindSentences: 0, characters: 0, practiceMinutes: 0, practiceMs: 0, halloweenWords: 0, halloweenSentences: 0, halloweenPerfectSentences: 0 },
       completed: [],
+      allQuestsXpAwarded: false,
       qualified: false,
       currentStreak: 0,
       longestStreak: 0,
@@ -56,23 +89,40 @@
 
   const $ = (id) => document.getElementById(id);
   const state = loadState();
-  let activeExercise = { mode: "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false };
+  let activeExercise = { id: `initial-${Date.now()}`, mode: "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false, statsRecorded: false, xpAwarded: false };
   let toastTimer = 0;
   let cloudUser = null;
   let cloudReady = false;
+  let progressDirty = false;
+  let selectedStatsRange = 7;
 
   function normalizeState(saved) {
     const fresh = defaultState();
     return {
       ...fresh,
       ...saved,
-      daily: { ...fresh.daily, ...(saved.daily || {}), questIds: Array.isArray((saved.daily || {}).questIds) ? saved.daily.questIds : [], progress: { ...fresh.daily.progress, ...((saved.daily || {}).progress || {}) }, completed: Array.isArray((saved.daily || {}).completed) ? saved.daily.completed : [] }
+      themeProgress: Object.fromEntries(THEME_META.map((theme) => [theme.id, {
+        ...fresh.themeProgress[theme.id],
+        ...((saved.themeProgress || {})[theme.id] || {}),
+        completed: Array.isArray((saved.themeProgress || {})[theme.id]?.completed) ? [...new Set((saved.themeProgress || {})[theme.id].completed)] : []
+      }])),
+      progression: {
+        ...fresh.progression,
+        ...(saved.progression || {}),
+        claimedRewardIds: Array.isArray(saved.progression?.claimedRewardIds) ? [...new Set(saved.progression.claimedRewardIds)] : [],
+        xpRewardHistory: Array.isArray(saved.progression?.xpRewardHistory) ? saved.progression.xpRewardHistory.slice(-1500) : [],
+        dailyActivity: Array.isArray(saved.progression?.dailyActivity) ? saved.progression.dailyActivity.slice(-1200) : [],
+        practiceStreak: { ...fresh.progression.practiceStreak, ...(saved.progression?.practiceStreak || {}), claimedMilestones: Array.isArray(saved.progression?.practiceStreak?.claimedMilestones) ? saved.progression.practiceStreak.claimedMilestones : [] },
+        categoryStats: saved.progression?.categoryStats && typeof saved.progression.categoryStats === "object" ? saved.progression.categoryStats : {},
+        wpmStats: saved.progression?.wpmStats && typeof saved.progression.wpmStats === "object" ? saved.progression.wpmStats : {}
+      },
+      daily: { ...fresh.daily, ...(saved.daily || {}), questIds: Array.isArray((saved.daily || {}).questIds) ? saved.daily.questIds : [], progress: { ...fresh.daily.progress, ...((saved.daily || {}).progress || {}) }, completed: Array.isArray((saved.daily || {}).completed) ? saved.daily.completed : [], allQuestsXpAwarded: Boolean(saved.daily?.allQuestsXpAwarded) }
     };
   }
 
   function loadState() {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+      const saved = JSON.parse(window.localStorage?.getItem(STORAGE_KEY) || "null");
       return saved && typeof saved === "object" ? normalizeState(saved) : defaultState();
     } catch (_) {
       return defaultState();
@@ -85,8 +135,9 @@
 
   async function saveProgressNow() {
     if (!cloudUser || !cloudReady || !window.morseCloud) return false;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(state));
     await window.morseCloud.saveProgress(cloudUser.uid, state);
+    progressDirty = false;
     return true;
   }
 
@@ -95,11 +146,12 @@
     Object.keys(state).forEach((key) => delete state[key]);
     Object.assign(state, normalized);
     ensureDaily();
+    progressDirty = false;
     renderAll();
   }
 
   function clearProgressState() {
-    localStorage.removeItem(STORAGE_KEY);
+    window.localStorage?.removeItem(STORAGE_KEY);
     replaceState(defaultState());
   }
 
@@ -114,7 +166,22 @@
     }
   });
 
-  window.morseProgress = { saveNow: saveProgressNow, isCloudReady: () => cloudReady && Boolean(cloudUser) };
+  window.morseProgress = {
+    saveNow: saveProgressNow,
+    isCloudReady: () => cloudReady && Boolean(cloudUser),
+    isDirty: () => progressDirty,
+    getSnapshot: () => JSON.parse(JSON.stringify(state))
+  };
+
+  function markDirty() {
+    progressDirty = true;
+  }
+
+  window.addEventListener("beforeunload", (event) => {
+    if (!progressDirty) return;
+    event.preventDefault();
+    event.returnValue = "You have unsaved progress.";
+  });
 
   function todayKey(date = new Date()) {
     const year = date.getFullYear();
@@ -189,6 +256,13 @@
 
   function ensureDaily() {
     const date = todayKey();
+    const streak = state.progression.practiceStreak;
+    if (streak.lastPracticeDate && daysBetween(streak.lastPracticeDate, date) > 1 && streak.current) {
+      streak.current = 0;
+      streak.streakStartDate = "";
+      streak.claimedMilestones = [];
+      markDirty();
+    }
     if (state.daily.date !== date) {
       const previousDate = state.daily.date;
       if (previousDate && (!state.daily.qualified || daysBetween(previousDate, date) > 1)) state.daily.currentStreak = 0;
@@ -197,12 +271,14 @@
       state.daily.progress = emptyDailyProgress();
       state.daily.completed = [];
       state.daily.qualified = false;
+      state.daily.allQuestsXpAwarded = false;
       saveState();
     } else if (!Array.isArray(state.daily.questIds) || state.daily.questIds.length !== 5 || state.daily.questIds.some((id) => REMOVED_QUEST_IDS.has(id) || !QUESTS.some((quest) => quest.id === id))) {
       state.daily.questIds = questIdsForDate(date);
       state.daily.progress = emptyDailyProgress();
       state.daily.completed = [];
       state.daily.qualified = false;
+      state.daily.allQuestsXpAwarded = false;
       saveState();
     }
   }
@@ -226,10 +302,176 @@
     return mode === "sentences" || mode === "halloween-sentences";
   }
 
+  function getLevelInfo(totalXp = state.progression.totalXp) {
+    let level = 1;
+    let remaining = Math.max(0, Number(totalXp) || 0);
+    let required = 100;
+    while (remaining >= required) {
+      remaining -= required;
+      level += 1;
+      required = level * 100;
+    }
+    return { level, currentXp: remaining, requiredXp: required, percent: Math.min(100, (remaining / required) * 100) };
+  }
+
+  function categoryForMode(mode) {
+    if (isSentenceMode(mode)) return mode === "halloween-sentences" ? "halloween-sentences" : "sentences";
+    if (isWordMode(mode)) return mode === "halloween" ? "halloween-words" : "words";
+    if (mode === "random-letters") return "random-letters";
+    if (mode === "numbers") return "numbers";
+    return "letters";
+  }
+
+  function getCategoryStats(category) {
+    if (!state.progression.categoryStats[category]) state.progression.categoryStats[category] = { exercises: 0, correctAnswers: 0, incorrectAnswers: 0, accuracyPoints: 0, characters: 0, xpEarned: 0 };
+    return state.progression.categoryStats[category];
+  }
+
+  function getWpmStats() {
+    const value = Math.round(Number(window.morseSettings?.effectiveWpm || 0));
+    if (!value) return null;
+    const key = String(value);
+    if (!state.progression.wpmStats[key]) state.progression.wpmStats[key] = { exercises: 0, correctAnswers: 0, accuracyPoints: 0, characters: 0 };
+    return state.progression.wpmStats[key];
+  }
+
+  function getActivity(date = todayKey()) {
+    let activity = state.progression.dailyActivity.find((entry) => entry.date === date);
+    if (!activity) {
+      activity = { date, exercises: 0, correct: 0, accuracyPoints: 0, characters: 0, xp: 0, practiceMs: 0 };
+      state.progression.dailyActivity.push(activity);
+      state.progression.dailyActivity.sort((first, second) => first.date.localeCompare(second.date));
+      state.progression.dailyActivity = state.progression.dailyActivity.slice(-1200);
+    }
+    return activity;
+  }
+
+  function awardXp(amount, reason, rewardId = "") {
+    const value = Math.max(0, Math.round(Number(amount) || 0));
+    if (!value) return 0;
+    if (rewardId && state.progression.claimedRewardIds.includes(rewardId)) return 0;
+    if (rewardId) state.progression.claimedRewardIds.push(rewardId);
+    state.progression.totalXp += value;
+    state.progression.xpRewardHistory.push({ id: rewardId || `${todayKey()}-${Date.now()}`, date: todayKey(), amount: value, reason });
+    state.progression.xpRewardHistory = state.progression.xpRewardHistory.slice(-1500);
+    getActivity().xp += value;
+    markDirty();
+    return value;
+  }
+
+  function exerciseXp(mode, matches, exact) {
+    let value = isSentenceMode(mode) ? (exact ? 15 : 0) : isWordMode(mode) ? (exact ? 5 : 0) : Math.max(0, Math.round(matches)) * 2;
+    if (exact) value += 10;
+    return value;
+  }
+
+  function recordPracticeDay() {
+    const streak = state.progression.practiceStreak;
+    const date = todayKey();
+    if (streak.lastPracticeDate === date) return { xp: 0, milestone: 0 };
+    const consecutive = streak.lastPracticeDate && daysBetween(streak.lastPracticeDate, date) === 1;
+    streak.current = consecutive ? streak.current + 1 : 1;
+    streak.longest = Math.max(streak.longest, streak.current);
+    streak.lastPracticeDate = date;
+    streak.activeDays += 1;
+    if (!consecutive) {
+      streak.streakStartDate = date;
+      streak.claimedMilestones = [];
+    }
+    const milestone = streak.current >= 30 && streak.current % 30 === 0 ? streak.current : [3, 7, 14].find((value) => value === streak.current) || 0;
+    const reward = milestone === 3 ? 25 : milestone === 7 ? 75 : milestone === 14 ? 150 : milestone >= 30 ? 300 : 0;
+    let xp = 0;
+    if (reward && !streak.claimedMilestones.includes(milestone)) {
+      streak.claimedMilestones.push(milestone);
+      xp = awardXp(reward, `${milestone}-day streak`, `streak:${streak.streakStartDate}:${milestone}`);
+    }
+    markDirty();
+    return { xp, milestone };
+  }
+
+  function recordGradedActivity(detail, exact, matches, maxLength) {
+    const progression = state.progression;
+    const levelBefore = getLevelInfo().level;
+    const category = getCategoryStats(categoryForMode(detail.mode));
+    const wpm = getWpmStats();
+    const activity = getActivity();
+    const accuracy = Math.max(0, Math.min(100, Number(detail.accuracy) || 0));
+    progression.totalExercisesCompleted += 1;
+    progression.totalCorrectAnswers += exact ? 1 : 0;
+    progression.totalIncorrectAnswers += exact ? 0 : 1;
+    category.exercises += 1;
+    category.correctAnswers += exact ? 1 : 0;
+    category.incorrectAnswers += exact ? 0 : 1;
+    category.accuracyPoints += accuracy * maxLength;
+    category.characters += maxLength;
+    if (wpm) {
+      wpm.exercises += 1;
+      wpm.correctAnswers += exact ? 1 : 0;
+      wpm.accuracyPoints += accuracy * maxLength;
+      wpm.characters += maxLength;
+    }
+    activity.exercises += 1;
+    activity.correct += exact ? 1 : 0;
+    activity.accuracyPoints += accuracy * maxLength;
+    activity.characters += maxLength;
+    const streak = recordPracticeDay();
+    let xp = 0;
+    if (!activeExercise.xpAwarded) {
+      xp += awardXp(exerciseXp(detail.mode, matches, exact), exact ? "Perfect exercise" : "Correct characters", `exercise:${activeExercise.id}`);
+      if (Date.now() - Number(progression.lastSessionRewardAt || 0) >= 30 * 60 * 1000) {
+        progression.lastSessionRewardAt = Date.now();
+        xp += awardXp(20, "Practice session", `session:${todayKey()}:${Math.floor(Date.now() / (30 * 60 * 1000))}`);
+      }
+      activeExercise.xpAwarded = true;
+    }
+    category.xpEarned += xp;
+    activeExercise.statsRecorded = true;
+    markDirty();
+    return { xp: xp + streak.xp, levelBefore, levelAfter: getLevelInfo(), streak };
+  }
+
+  function showXpToast(amount) {
+    if (!amount) return;
+    const toast = $("rpg-toast");
+    if (!toast) return;
+    toast.classList.remove("prominent", "accuracy-reward", "level-up", "show");
+    toast.classList.add("xp-reward");
+    toast.innerHTML = `<span class="xp-toast-kicker">PROGRESS EARNED</span><strong class="xp-toast-amount">+${amount} XP</strong>`;
+    window.clearTimeout(toastTimer);
+    window.requestAnimationFrame(() => toast.classList.add("show"));
+    toastTimer = window.setTimeout(() => toast.classList.remove("show"), 2300);
+  }
+
+  function showLevelUp(level) {
+    const toast = $("rpg-toast");
+    if (!toast) return;
+    toast.classList.remove("prominent", "accuracy-reward", "xp-reward", "show");
+    toast.classList.add("level-up");
+    toast.innerHTML = `<span class="xp-toast-kicker">✦ LEVEL UP ✦</span><strong class="xp-toast-amount">LEVEL ${level}</strong><span class="xp-toast-label">Your signal is getting stronger</span>`;
+    window.clearTimeout(toastTimer);
+    window.requestAnimationFrame(() => toast.classList.add("show"));
+    toastTimer = window.setTimeout(() => toast.classList.remove("show"), 3500);
+    try {
+      const context = new (window.AudioContext || window.webkitAudioContext)();
+      [523.25, 659.25, 783.99].forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.frequency.value = frequency;
+        gain.gain.setValueAtTime(0.0001, context.currentTime + index * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + index * 0.08 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + index * 0.08 + 0.18);
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start(context.currentTime + index * 0.08);
+        oscillator.stop(context.currentTime + index * 0.08 + 0.2);
+      });
+      window.setTimeout(() => context.close(), 700);
+    } catch (_) {}
+  }
+
   function showRpgToast(message, prominent = false) {
     const toast = $("rpg-toast");
     if (!toast) return;
-    toast.classList.remove("accuracy-reward");
+    toast.classList.remove("accuracy-reward", "xp-reward", "level-up");
     toast.textContent = message;
     toast.classList.toggle("prominent", prominent);
     toast.classList.add("show");
@@ -240,7 +482,7 @@
   function showAccuracyToast() {
     const toast = $("rpg-toast");
     if (!toast) return;
-    toast.classList.remove("prominent", "accuracy-reward", "show");
+    toast.classList.remove("prominent", "accuracy-reward", "xp-reward", "level-up", "show");
     toast.classList.add("accuracy-reward");
     toast.innerHTML = `<span class="accuracy-toast-kicker">✦ PERFECT COPY ✦</span><strong class="accuracy-toast-amount">100% ACCURACY</strong><span class="accuracy-toast-label">Clean transmission</span>`;
     window.clearTimeout(toastTimer);
@@ -257,6 +499,8 @@
       ensureDaily();
       state.daily.progress.practiceMs += elapsed;
       state.daily.progress.practiceMinutes = Math.floor(state.daily.progress.practiceMs / 60000);
+      getActivity().practiceMs += elapsed;
+      markDirty();
       updateDailyQuests();
     }
     renderDaily();
@@ -264,17 +508,24 @@
 
   function updateDailyQuests() {
     ensureDaily();
+    let earned = 0;
     dailyQuests().forEach((quest) => {
       const value = Number(state.daily.progress[quest.metric] || 0);
       if (value >= quest.target && !state.daily.completed.includes(quest.id)) {
         state.daily.completed.push(quest.id);
         state.totalQuestsCompleted += 1;
         if (quest.season) state.halloweenQuestsCompleted += 1;
+        earned += awardXp(25, `Daily quest: ${quest.title}`, `quest:${state.daily.date}:${quest.id}`);
       }
     });
+    if (state.daily.completed.length === dailyQuests().length && !state.daily.allQuestsXpAwarded) {
+      state.daily.allQuestsXpAwarded = true;
+      earned += awardXp(50, "All daily quests", `all-quests:${state.daily.date}`);
+    }
     if (state.daily.completed.length >= 3) qualifyToday();
     saveState();
     renderDaily();
+    return earned;
   }
 
   function handleScore(detail) {
@@ -283,6 +534,8 @@
       return;
     }
     if (activeExercise.revealed || activeExercise.rewarded) return;
+    // The score event carries the authoritative mode. This keeps rewards working
+    // even if the initial exercise-start event was missed during script loading.
     const exerciseMode = String(detail.mode || activeExercise.mode || "letters");
     activeExercise.mode = exerciseMode;
     ensureDaily();
@@ -290,19 +543,33 @@
     const actual = String(detail.actual || "");
     const accuracy = Number(detail.accuracy) || 0;
     const maxLength = Math.max(Number(detail.maxLength) || expected.length, 1);
-    state.totalAccuracyPoints += accuracy * maxLength;
-    state.totalAccuracyCharacters += maxLength;
+    const exact = accuracy === 100 && expected === actual;
+    const matches = Math.max(0, Number(detail.matches) || (exact ? maxLength : 0));
+    let earned = 0;
+    let levelBefore = getLevelInfo().level;
+    if (!activeExercise.statsRecorded) {
+      state.totalAccuracyPoints += accuracy * maxLength;
+      state.totalAccuracyCharacters += maxLength;
+      const result = recordGradedActivity(detail, exact, matches, maxLength);
+      earned += result.xp;
+      levelBefore = result.levelBefore.level;
+    }
     if (accuracy !== 100 || expected !== actual) {
       state.perfectStreak = 0;
       if (isSentenceMode(exerciseMode)) state.sentencePerfectStreak = 0;
       saveState();
       renderAll();
+      if (earned) showXpToast(earned);
       return;
     }
 
     activeExercise.rewarded = true;
     state.successfulExercises += 1;
     state.totalCharacters += expected.replace(/\s/g, "").length;
+    if (isSentenceMode(exerciseMode) && detail.themeId && state.themeProgress[detail.themeId]) {
+      const completed = state.themeProgress[detail.themeId].completed;
+      if (!completed.includes(expected)) completed.push(expected);
+    }
     state.perfectStreak += 1;
     state.longestPerfectStreak = Math.max(state.longestPerfectStreak, state.perfectStreak);
     if (isWordMode(exerciseMode)) {
@@ -331,10 +598,23 @@
     }
     if (Number(window.morseSettings?.effectiveWpm || 0) >= 10) state.perfectAt10 += 1;
     state.daily.progress.characters += expected.replace(/\s/g, "").length;
-    updateDailyQuests();
+    earned += updateDailyQuests();
     saveState();
     showAccuracyToast();
     renderAll();
+    const levelAfter = getLevelInfo().level;
+    if (levelAfter > levelBefore) window.setTimeout(() => showLevelUp(levelAfter), 700);
+    if (earned) window.setTimeout(() => showXpToast(earned), 1500);
+  }
+
+  function renderThemeProgress() {
+    const container = $("theme-progress-grid");
+    if (!container) return;
+    container.innerHTML = THEME_META.map((theme) => {
+      const count = Math.min(500, state.themeProgress[theme.id]?.completed.length || 0);
+      const percentage = (count / 500) * 100;
+      return `<article class="theme-progress-card"><div class="theme-progress-icon">${theme.icon}</div><div class="theme-progress-copy"><div class="theme-progress-title"><strong>${escapeHtml(theme.name)}</strong><span>${count} / 500</span></div><div class="challenge-progress"><i style="width:${percentage}%"></i></div><small>${count === 500 ? "Library mastered" : `${500 - count} sentences remaining`}</small></div></article>`;
+    }).join("");
   }
 
   function resetCountdownText() {
@@ -373,13 +653,108 @@
     if ($("daily-quests-bonus")) $("daily-quests-bonus").innerHTML = quests.filter((quest) => quest.group === "bonus").map(renderQuest).join("");
   }
 
+  function percentage(points, characters) {
+    return characters ? Math.round((points / characters) * 100) : 0;
+  }
+
+  function renderProgression() {
+    const info = getLevelInfo();
+    const streak = state.progression.practiceStreak;
+    const values = {
+      "compact-streak": `🔥 ${streak.current}-Day Streak`,
+      "compact-level": `⭐ Level ${info.level}`,
+      "compact-xp": `${Math.round(info.currentXp).toLocaleString()} / ${info.requiredXp.toLocaleString()} XP`,
+      "stats-level": `Level ${info.level}`,
+      "stats-xp": `${Math.round(info.currentXp).toLocaleString()} / ${info.requiredXp.toLocaleString()} XP`,
+      "stats-xp-total": Math.round(state.progression.totalXp).toLocaleString(),
+      "stats-streak": `${streak.current} day${streak.current === 1 ? "" : "s"}`,
+      "stats-longest-streak": `${streak.longest} day${streak.longest === 1 ? "" : "s"}`,
+      "stats-exercises": state.progression.totalExercisesCompleted.toLocaleString(),
+      "stats-correct": state.progression.totalCorrectAnswers.toLocaleString(),
+      "stats-accuracy": `${percentage(state.totalAccuracyPoints, state.totalAccuracyCharacters)}%`,
+      "stats-practice-time": formatDuration(state.totalPracticeMs),
+      "stats-practice-days": streak.activeDays.toLocaleString()
+    };
+    Object.entries(values).forEach(([id, value]) => { if ($(id)) $(id).textContent = value; });
+    ["compact-xp-bar", "stats-xp-bar"].forEach((id) => { if ($(id)) $(id).style.width = `${info.percent}%`; });
+  }
+
+  function statsEntries() {
+    const entries = state.progression.dailyActivity.filter((entry) => entry && entry.date);
+    if (selectedStatsRange === "all") return entries;
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - Number(selectedStatsRange) + 1);
+    return entries.filter((entry) => dateFromKey(entry.date) >= cutoff);
+  }
+
+  function chartSvg(entries, value, color, suffix = "") {
+    const width = 520;
+    const height = 180;
+    const padding = 24;
+    const points = entries.map((entry) => Math.max(0, Number(value(entry)) || 0));
+    if (!points.length || !points.some(Boolean)) return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="No data yet"><text x="260" y="92" text-anchor="middle" class="chart-empty-text">Practice to build this chart</text></svg>`;
+    const max = Math.max(...points, 1);
+    const coordinates = points.map((point, index) => {
+      const x = points.length === 1 ? width / 2 : padding + (index / (points.length - 1)) * (width - padding * 2);
+      const y = height - padding - (point / max) * (height - padding * 2);
+      return [x, y, point];
+    });
+    const polyline = coordinates.map(([x, y]) => `${x},${y}`).join(" ");
+    const circles = coordinates.map(([x, y, point]) => `<circle cx="${x}" cy="${y}" r="3.5"><title>${point}${suffix}</title></circle>`).join("");
+    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Progress chart"><line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" class="chart-axis"/><polyline points="${polyline}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${circles}</svg>`;
+  }
+
+  function barChartSvg(entries, value, color) {
+    const width = 520;
+    const height = 180;
+    const padding = 24;
+    const points = entries.map((entry) => Math.max(0, Number(value(entry)) || 0));
+    if (!points.length || !points.some(Boolean)) return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="No data yet"><text x="260" y="92" text-anchor="middle" class="chart-empty-text">Practice to build this chart</text></svg>`;
+    const max = Math.max(...points, 1);
+    const slot = (width - padding * 2) / points.length;
+    const bars = points.map((point, index) => {
+      const barHeight = (point / max) * (height - padding * 2);
+      const x = padding + index * slot + slot * 0.16;
+      const y = height - padding - barHeight;
+      return `<rect x="${x}" y="${y}" width="${Math.max(2, slot * 0.68)}" height="${barHeight}" rx="3" fill="${color}"><title>${point}</title></rect>`;
+    }).join("");
+    return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Daily activity chart"><line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" class="chart-axis"/>${bars}</svg>`;
+  }
+
+  function renderStats() {
+    const categoryGrid = $("category-stats-grid");
+    if (categoryGrid) {
+      categoryGrid.innerHTML = PROGRESSION_CATEGORIES.map(([id, label]) => {
+        const item = state.progression.categoryStats[id] || { exercises: 0, correctAnswers: 0, incorrectAnswers: 0, accuracyPoints: 0, characters: 0, xpEarned: 0 };
+        return `<div class="category-stat-row"><strong>${label}</strong><span>${item.exercises} exercises</span><span>${percentage(item.accuracyPoints, item.characters)}% accuracy</span><span>${item.correctAnswers} correct · ${item.incorrectAnswers} incorrect</span><span>${item.xpEarned} XP</span></div>`;
+      }).join("");
+    }
+    const wpmGrid = $("wpm-stats-grid");
+    if (wpmGrid) {
+      const rows = Object.entries(state.progression.wpmStats).filter(([, item]) => item && item.exercises).sort(([first], [second]) => Number(first) - Number(second));
+      wpmGrid.innerHTML = rows.length ? rows.map(([wpm, item]) => `<div class="wpm-stat-row"><strong>${escapeHtml(wpm)} WPM</strong><span>${percentage(item.accuracyPoints, item.characters)}% accuracy</span><span>${item.exercises} exercise${item.exercises === 1 ? "" : "s"}</span></div>`).join("") : `<p class="stats-empty">WPM results will appear after graded practice.</p>`;
+      const highest = rows.filter(([, item]) => item.exercises >= 3 && percentage(item.accuracyPoints, item.characters) >= 90).at(-1);
+      if ($("highest-wpm")) $("highest-wpm").textContent = highest ? `${highest[0]} WPM` : "—";
+    }
+    const entries = statsEntries();
+    if ($("stats-range-label")) $("stats-range-label").textContent = selectedStatsRange === "all" ? "All time" : `Last ${selectedStatsRange} days`;
+    if ($("xp-chart")) $("xp-chart").innerHTML = chartSvg(entries, (entry) => entry.xp, "#63d6b2", " XP");
+    if ($("accuracy-chart")) $("accuracy-chart").innerHTML = chartSvg(entries, (entry) => percentage(entry.accuracyPoints, entry.characters), "#f2b861", "%");
+    if ($("activity-chart")) $("activity-chart").innerHTML = barChartSvg(entries, (entry) => entry.exercises, "#9e8cff");
+    if ($("exercise-chart")) $("exercise-chart").innerHTML = barChartSvg(entries, (entry) => entry.correct, "#ef7aa8");
+  }
+
   function renderAll() {
+    renderProgression();
+    renderThemeProgress();
     renderDaily();
+    renderStats();
   }
 
   function bindEvents() {
     window.addEventListener("morse:exercise-start", (event) => {
-      activeExercise = { mode: event.detail.mode || "letters", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false };
+      activeExercise = { id: `${Date.now()}-${Math.random().toString(36).slice(2)}`, mode: event.detail.mode || "letters", themeId: event.detail.themeId || "", rewinds: 0, pauses: 0, playStartedAt: 0, rewarded: false, revealed: false, statsRecorded: false, xpAwarded: false };
     });
     window.addEventListener("morse:playback-start", () => {
       if (!activeExercise.playStartedAt) activeExercise.playStartedAt = Date.now();
@@ -392,6 +767,11 @@
     });
     window.addEventListener("morse:pause", () => { activeExercise.pauses += 1; });
     window.addEventListener("morse:score", (event) => handleScore(event.detail));
+    document.querySelectorAll("[data-stats-range]").forEach((button) => button.addEventListener("click", () => {
+      selectedStatsRange = button.dataset.statsRange === "all" ? "all" : Number(button.dataset.statsRange);
+      document.querySelectorAll("[data-stats-range]").forEach((item) => item.classList.toggle("active", item === button));
+      renderStats();
+    }));
     window.setInterval(updateResetCountdown, 1000);
   }
 
