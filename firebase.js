@@ -71,6 +71,8 @@ function renderAccount(user) {
   if (signedOut) signedOut.hidden = Boolean(user);
   if (signedIn) signedIn.hidden = !user;
   if (user && $("auth-user-label")) $("auth-user-label").textContent = user.email || "your account";
+  const saveButton = $("auth-save-progress");
+  if (saveButton) saveButton.disabled = true;
 }
 
 async function runAuthAction(action) {
@@ -93,6 +95,24 @@ async function runAuthAction(action) {
 
 $("auth-sign-in")?.addEventListener("click", () => runAuthAction("signin"));
 $("auth-sign-up")?.addEventListener("click", () => runAuthAction("signup"));
+$("auth-save-progress")?.addEventListener("click", async () => {
+  const button = $("auth-save-progress");
+  if (!window.morseProgress?.isCloudReady()) {
+    setMessage("Wait for your account to finish loading, then try again.", true);
+    return;
+  }
+  button.disabled = true;
+  button.textContent = "Saving…";
+  try {
+    await window.morseProgress.saveNow();
+    setMessage("Progress saved. You can sign in on another device to load it.");
+  } catch (error) {
+    setMessage("Progress could not be saved. Check Firestore Rules and try again.", true);
+  } finally {
+    button.disabled = !window.morseProgress?.isCloudReady();
+    button.textContent = "Save Progress";
+  }
+});
 $("auth-sign-out")?.addEventListener("click", async () => {
   try {
     await signOut(auth);
@@ -100,6 +120,12 @@ $("auth-sign-out")?.addEventListener("click", async () => {
   } catch (error) {
     setMessage(friendlyAuthError(error), true);
   }
+});
+
+window.addEventListener("morse:cloud-progress", (event) => {
+  const detail = event.detail || {};
+  const button = $("auth-save-progress");
+  if (button) button.disabled = !detail.user || Boolean(detail.error);
 });
 
 onAuthStateChanged(auth, async (user) => {

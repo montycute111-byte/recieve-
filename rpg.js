@@ -70,7 +70,6 @@
   let toastTimer = 0;
   let cloudUser = null;
   let cloudReady = false;
-  let cloudSaveTimer = 0;
 
   function normalizeState(saved) {
     const fresh = defaultState();
@@ -96,19 +95,14 @@
   }
 
   function saveState() {
-    try {
-      window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (_) {
-      // Progress still updates for the current session if storage is blocked.
-    }
-    if (cloudReady && cloudUser && window.morseCloud) {
-      window.clearTimeout(cloudSaveTimer);
-      cloudSaveTimer = window.setTimeout(() => {
-        window.morseCloud.saveProgress(cloudUser.uid, state).catch(() => {
-          // Local storage remains available if cloud saving is temporarily unavailable.
-        });
-      }, 800);
-    }
+    // Progress stays in memory until the user explicitly presses Save Progress.
+  }
+
+  async function saveProgressNow() {
+    if (!cloudUser || !cloudReady || !window.morseCloud) return false;
+    window.localStorage?.setItem(STORAGE_KEY, JSON.stringify(state));
+    await window.morseCloud.saveProgress(cloudUser.uid, state);
+    return true;
   }
 
   function replaceState(nextState) {
@@ -126,9 +120,10 @@
     if (cloudUser && !detail.error && detail.progress && typeof detail.progress === "object") replaceState(detail.progress);
     if (cloudUser && !detail.error) {
       cloudReady = true;
-      saveState();
     }
   });
+
+  window.morseProgress = { saveNow: saveProgressNow, isCloudReady: () => cloudReady && Boolean(cloudUser) };
 
   function todayKey(date = new Date()) {
     const year = date.getFullYear();
