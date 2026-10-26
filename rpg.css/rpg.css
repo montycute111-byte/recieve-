@@ -367,6 +367,24 @@
   margin-top: 1rem;
 }
 
+.stats-section > .section-heading {
+  align-items: flex-end;
+  gap: 1rem;
+  padding-bottom: 0.15rem;
+}
+
+.stats-section > .section-heading > strong {
+  align-self: flex-end;
+  flex: 0 0 auto;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #d7e9e5;
+  border-radius: 0.65rem;
+  color: var(--accent-dark);
+  background: #f4fbf9;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
 .category-stats-grid,
 .wpm-stats-grid {
   display: grid;
@@ -385,7 +403,7 @@
   border-radius: 0.7rem;
   background: #fbfcfc;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
 }
 
 .wpm-stat-row {
@@ -638,6 +656,15 @@
 
   .stats-hero .progression-bar {
     min-width: 0;
+  }
+
+  .stats-section > .section-heading {
+    align-items: flex-start;
+  }
+
+  .stats-section > .section-heading > strong {
+    align-self: flex-start;
+    margin-top: -0.1rem;
   }
 
   .stats-chart-grid {
