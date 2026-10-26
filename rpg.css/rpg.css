@@ -487,6 +487,36 @@
   box-shadow: 0 2px 7px #126e6416;
 }
 
+.global-save-bar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin: -20px 0 24px;
+  padding: 10px 0 12px;
+  background: var(--paper);
+}
+
+.global-save-copy {
+  display: grid;
+  gap: 1px;
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.global-save-copy .eyebrow {
+  font-size: 0.62rem;
+}
+
+.global-save-bar button {
+  padding: 0.58rem 0.85rem;
+  white-space: nowrap;
+}
+
 .stats-chart-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -744,6 +774,28 @@
 }
 
 @media (max-width: 620px) {
+  .global-save-bar {
+    gap: 0.65rem;
+    margin: -8px 0 16px;
+    padding: 4px 0 10px;
+  }
+
+  .global-save-copy {
+    min-width: 0;
+  }
+
+  .global-save-copy span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .global-save-bar button {
+    flex: 0 0 auto;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.78rem;
+  }
+
   body {
     overflow-x: hidden;
   }

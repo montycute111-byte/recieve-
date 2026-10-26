@@ -77,6 +77,21 @@ function setMessage(message, isError = false) {
   element.style.color = isError ? "#a33b3b" : "";
 }
 
+function setSaveStatus(message, isError = false) {
+  const element = $("global-save-status");
+  if (!element) return;
+  element.textContent = message;
+  element.style.color = isError ? "#a33b3b" : "";
+}
+
+function saveButtons() {
+  return [$("auth-save-progress"), $("global-save-progress")].filter(Boolean);
+}
+
+function setSaveButtonsDisabled(disabled) {
+  saveButtons().forEach((button) => { button.disabled = disabled; });
+}
+
 function friendlyAuthError(error) {
   const messages = {
     "auth/email-already-in-use": "That email already has an account. Try signing in.",
@@ -98,8 +113,32 @@ function renderAccount(user) {
   if ($("account-save-copy")) $("account-save-copy").textContent = user
     ? "Signed in: cloud progress saves when you press Save Progress."
     : "Signed out: progress is temporary. Sign in to save it.";
-  const saveButton = $("auth-save-progress");
-  if (saveButton) saveButton.disabled = true;
+  setSaveButtonsDisabled(true);
+  setSaveStatus(user ? "Ready to save manually" : "Sign in to save progress");
+}
+
+async function saveProgressFromButton() {
+  if (!window.morseProgress?.isCloudReady()) {
+    setMessage("Wait for your account to finish loading, then try again.", true);
+    setSaveStatus("Sign in to save progress", true);
+    return;
+  }
+  setSaveButtonsDisabled(true);
+  saveButtons().forEach((button) => { button.textContent = "Saving…"; });
+  setSaveStatus("Saving your progress…");
+  try {
+    await window.morseProgress.saveNow();
+    setMessage("Progress saved. You can sign in on another device to load it.");
+    setSaveStatus("Progress saved just now");
+  } catch (error) {
+    setMessage("Progress could not be saved. Check Firestore Rules and try again.", true);
+    setSaveStatus("Save failed — try again", true);
+  } finally {
+    saveButtons().forEach((button) => {
+      button.disabled = !window.morseProgress?.isCloudReady();
+      button.textContent = "Save Progress";
+    });
+  }
 }
 
 async function runAuthAction(action) {
@@ -122,24 +161,8 @@ async function runAuthAction(action) {
 
 $("auth-sign-in")?.addEventListener("click", () => runAuthAction("signin"));
 $("auth-sign-up")?.addEventListener("click", () => runAuthAction("signup"));
-$("auth-save-progress")?.addEventListener("click", async () => {
-  const button = $("auth-save-progress");
-  if (!window.morseProgress?.isCloudReady()) {
-    setMessage("Wait for your account to finish loading, then try again.", true);
-    return;
-  }
-  button.disabled = true;
-  button.textContent = "Saving…";
-  try {
-    await window.morseProgress.saveNow();
-    setMessage("Progress saved. You can sign in on another device to load it.");
-  } catch (error) {
-    setMessage("Progress could not be saved. Check Firestore Rules and try again.", true);
-  } finally {
-    button.disabled = !window.morseProgress?.isCloudReady();
-    button.textContent = "Save Progress";
-  }
-});
+$("auth-save-progress")?.addEventListener("click", saveProgressFromButton);
+$("global-save-progress")?.addEventListener("click", saveProgressFromButton);
 $("auth-sign-out")?.addEventListener("click", async () => {
   if (window.morseProgress?.isDirty() && !window.confirm("You have unsaved progress. Sign out anyway?")) return;
   try {
@@ -152,8 +175,10 @@ $("auth-sign-out")?.addEventListener("click", async () => {
 
 window.addEventListener("morse:cloud-progress", (event) => {
   const detail = event.detail || {};
-  const button = $("auth-save-progress");
-  if (button) button.disabled = !detail.user || Boolean(detail.error);
+  setSaveButtonsDisabled(!detail.user || Boolean(detail.error));
+  if (detail.user && !detail.error) setSaveStatus("Ready to save manually");
+  if (!detail.user) setSaveStatus("Sign in to save progress");
+  if (detail.error) setSaveStatus("Cloud save unavailable", true);
 });
 
 onAuthStateChanged(auth, async (user) => {

@@ -8,7 +8,7 @@
   <title>MorseReceive</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="feedback.css?v=2">
-  <link rel="stylesheet" href="rpg.css/rpg.css?v=21">
+  <link rel="stylesheet" href="rpg.css/rpg.css?v=22">
 </head>
 <body>
   <div class="app-shell">
@@ -30,6 +30,10 @@
     </aside>
 
     <main class="main-content">
+      <div class="global-save-bar" aria-label="Manual cloud saving">
+        <div class="global-save-copy"><span class="eyebrow">CLOUD SAVE</span><span id="global-save-status">Sign in to save progress</span></div>
+        <button type="button" class="primary" id="global-save-progress" disabled>Save Progress</button>
+      </div>
       <section class="view active" id="practice-view" aria-labelledby="practice-title">
         <header class="page-header">
           <div><p class="eyebrow">MORSE CODE TRAINER</p><h1 id="practice-title">Practice</h1><p>Train your ear one clean character at a time.</p></div>
@@ -154,6 +158,6 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="rpg.js?v=26"></script>
   <script src="app-word-themes-v2.js?v=5"></script>
-  <script type="module" src="firebase.js?v=3"></script>
+  <script type="module" src="firebase.js?v=4"></script>
 </body>
 </html>
