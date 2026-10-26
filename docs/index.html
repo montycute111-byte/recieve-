@@ -127,7 +127,7 @@
       <section class="view" id="account-view" aria-labelledby="account-title">
         <header class="page-header"><div><p class="eyebrow">ACCOUNT &amp; CLOUD SAVE</p><h1 id="account-title">Your Account</h1><p>Sign in to keep your Morse progress available on every device.</p></div><div class="profile-pill"><span class="status-dot"></span><span>Cloud Sync</span></div></header>
         <section class="account-bar panel" aria-label="Account and cloud saving">
-          <div class="account-bar-copy"><div class="account-badge" aria-hidden="true">☁</div><div><p class="eyebrow">SYNC YOUR TRAINING</p><h2>Keep your progress with you</h2><p id="account-save-copy">Signed out: progress is temporary. Sign in to save it.</p></div></div>
+          <div class="account-bar-copy"><div class="account-badge" aria-hidden="true"><img src="assets/account-icons/cloud-save.png?v=1" alt=""></div><div><p class="eyebrow">SYNC YOUR TRAINING</p><h2>Keep your progress with you</h2><p id="account-save-copy">Signed out: progress is temporary. Sign in to save it.</p></div></div>
           <div id="auth-signed-out" class="account-form"><label>Email<input id="auth-email" type="email" autocomplete="email" placeholder="you@example.com"></label><label>Password<input id="auth-password" type="password" autocomplete="current-password" minlength="6" placeholder="At least 6 characters"></label><div class="auth-actions"><button type="button" class="primary" id="auth-sign-in">Sign in</button><button type="button" id="auth-sign-up">Create account</button></div></div>
           <div id="auth-signed-in" class="account-form" hidden><p class="account-signed-in-copy">Signed in as <strong id="auth-user-label"></strong><span>Press Save Progress when you want to sync.</span></p><div class="auth-actions"><button type="button" class="primary" id="auth-save-progress">Save Progress</button><button type="button" id="auth-sign-out">Sign out</button></div></div>
           <p class="account-message" id="auth-message" role="status"></p>
@@ -168,7 +168,7 @@
     </div>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="rpg.js?v=30"></script>
+  <script src="rpg.js?v=31"></script>
   <script src="app.js?v=42"></script>
   <script type="module" src="firebase.js?v=4"></script>
 </body>
