@@ -649,7 +649,7 @@
     const raw = Number(state.daily.progress[quest.metric] || 0);
     const progress = Math.min(quest.target, raw);
     const complete = state.daily.completed.includes(quest.id);
-    return `<article class="challenge-card quest-card${complete ? " complete" : ""}"><div class="challenge-icon">${complete ? "✓" : quest.season ? "☾" : "◇"}</div><div class="challenge-copy"><div class="quest-title-row"><strong>${escapeHtml(quest.title)}</strong></div><span>${escapeHtml(quest.description)}</span><div class="challenge-progress"><i style="width:${(progress / quest.target) * 100}%"></i></div><small>${progress} / ${quest.target}${complete ? " · Complete" : ""}</small></div></article>`;
+    return `<article class="challenge-card quest-card${complete ? " complete" : ""}"><div class="challenge-icon"><img src="assets/quest-icon.png?v=1" alt=""></div><div class="challenge-copy"><div class="quest-title-row"><strong>${escapeHtml(quest.title)}</strong></div><span>${escapeHtml(quest.description)}</span><div class="challenge-progress"><i style="width:${(progress / quest.target) * 100}%"></i></div><small>${progress} / ${quest.target}${complete ? " · Complete" : ""}</small></div></article>`;
   }
 
   function renderDaily() {

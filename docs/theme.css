@@ -365,11 +365,16 @@ html[data-theme="dark"] .account-message.error {
 }
 
 .theme-option-icon img,
-.theme-progress-icon img {
+.theme-progress-icon img,
+.challenge-icon img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.challenge-icon {
+  overflow: hidden;
 }
 
 @media (max-width: 620px) {
