@@ -53,13 +53,13 @@
   ];
   const THEME_STORAGE_KEY = "morseReceiveSentenceThemes";
   const THEME_META = [
-    { id: "video-games", icon: "🎮", name: "Video Games" },
-    { id: "movies-tv", icon: "🎬", name: "Movies & TV" },
-    { id: "famous-quotes", icon: "💬", name: "Famous Quotes" },
-    { id: "jokes-riddles", icon: "😂", name: "Jokes & Riddles" },
-    { id: "music", icon: "🎵", name: "Music" },
-    { id: "general-sentences", icon: "📝", name: "General Sentences" },
-    { id: "halloween", icon: "🎃", name: "Halloween" }
+    { id: "video-games", icon: "video-games", name: "Video Games" },
+    { id: "movies-tv", icon: "movies-tv", name: "Movies & TV" },
+    { id: "famous-quotes", icon: "famous-quotes", name: "Famous Quotes" },
+    { id: "jokes-riddles", icon: "jokes-riddles", name: "Jokes & Riddles" },
+    { id: "music", icon: "music", name: "Music" },
+    { id: "general-sentences", icon: "general-sentences", name: "General Sentences" },
+    { id: "halloween", icon: "halloween", name: "Halloween" }
   ];
   const THEME_IDS = THEME_META.map((theme) => theme.id);
   const COMMON_WORD_THEME_IDS = THEME_IDS.filter((id) => !["famous-quotes", "jokes-riddles"].includes(id));
@@ -212,7 +212,7 @@
     const checked = selectedThemes.includes(theme.id) ? " checked" : "";
     const detail = isThemedWordMode(mode) ? "1–4 word phrases" : "500 sentences";
     const name = theme.name;
-    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true">${theme.icon}</span><span><strong>${name}</strong><small>${detail}</small></span></label>`;
+    return `<label class="theme-option"><input type="checkbox" value="${theme.id}"${checked}><span class="theme-option-icon" aria-hidden="true"><img src="assets/theme-icons/${theme.icon}.png?v=1" alt=""></span><span><strong>${name}</strong><small>${detail}</small></span></label>`;
   }
 
   function updateThemeSelectorCopy() {

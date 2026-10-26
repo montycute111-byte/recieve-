@@ -3,13 +3,13 @@
 
   const STORAGE_KEY = "morseReceiveRpgProgress";
   const THEME_META = [
-    { id: "video-games", icon: "🎮", name: "Video Games" },
-    { id: "movies-tv", icon: "🎬", name: "Movies & TV" },
-    { id: "famous-quotes", icon: "💬", name: "Famous Quotes" },
-    { id: "jokes-riddles", icon: "😂", name: "Jokes & Riddles" },
-    { id: "music", icon: "🎵", name: "Music" },
-    { id: "general-sentences", icon: "📝", name: "General Sentences" },
-    { id: "halloween", icon: "🎃", name: "Halloween" }
+    { id: "video-games", icon: "video-games", name: "Video Games" },
+    { id: "movies-tv", icon: "movies-tv", name: "Movies & TV" },
+    { id: "famous-quotes", icon: "famous-quotes", name: "Famous Quotes" },
+    { id: "jokes-riddles", icon: "jokes-riddles", name: "Jokes & Riddles" },
+    { id: "music", icon: "music", name: "Music" },
+    { id: "general-sentences", icon: "general-sentences", name: "General Sentences" },
+    { id: "halloween", icon: "halloween", name: "Halloween" }
   ];
   const STANDARD_QUESTS = [
     { id: "warm-up", title: "Warm-Up", description: "Decode 10 words correctly.", target: 10, metric: "words", group: "standard" },
@@ -624,7 +624,7 @@
     container.innerHTML = THEME_META.map((theme) => {
       const count = Math.min(500, state.themeProgress[theme.id]?.completed.length || 0);
       const percentage = (count / 500) * 100;
-      return `<article class="theme-progress-card"><div class="theme-progress-icon">${theme.icon}</div><div class="theme-progress-copy"><div class="theme-progress-title"><strong>${escapeHtml(theme.name)}</strong><span>${count} / 500</span></div><div class="challenge-progress"><i style="width:${percentage}%"></i></div><small>${count === 500 ? "Library mastered" : `${500 - count} sentences remaining`}</small></div></article>`;
+      return `<article class="theme-progress-card"><div class="theme-progress-icon"><img src="assets/theme-icons/${theme.icon}.png?v=1" alt=""></div><div class="theme-progress-copy"><div class="theme-progress-title"><strong>${escapeHtml(theme.name)}</strong><span>${count} / 500</span></div><div class="challenge-progress"><i style="width:${percentage}%"></i></div><small>${count === 500 ? "Library mastered" : `${500 - count} sentences remaining`}</small></div></article>`;
     }).join("");
   }
 
