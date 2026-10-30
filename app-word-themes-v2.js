@@ -158,6 +158,10 @@
     return ["short", "medium", "long"].includes(length) ? length : "long";
   }
 
+  function sentenceLengthLabel(selectId) {
+    return { short: "Short · 5–18 words", medium: "Medium · 8–20 words", long: "Long · 12–28 words" }[sentenceLength(selectId)];
+  }
+
   function practiceConfigKey(mode = $("mode-select").value) {
     if (isRandomLettersMode(mode)) return `${mode}:${randomLettersLength("group-size-select")}`;
     if (isThemedSentenceMode(mode)) return `${mode}:${sentenceLength("sentence-length-select")}`;
@@ -569,13 +573,13 @@
 
   function updateSummary() {
     const mode = $("mode-select").value;
-    const exerciseType = isSentenceMode() ? `${sentenceLength("sentence-length-select")} sentences` : isWordMode() ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = isSentenceMode() ? sentenceLengthLabel("sentence-length-select") : isWordMode() ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateListenSummary() {
     const mode = $("listen-mode-select").value;
-    const exerciseType = mode === "sentences" ? `${sentenceLength("listen-sentence-length-select")} sentences` : ["phrases", "halloween"].includes(mode) ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("listen-group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = mode === "sentences" ? sentenceLengthLabel("listen-sentence-length-select") : ["phrases", "halloween"].includes(mode) ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("listen-group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("listen-summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
