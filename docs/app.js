@@ -158,7 +158,7 @@
   }
 
   function sentenceLengthLabel(selectId) {
-    return { short: "Short · 5–18 words", medium: "Medium · 8–20 words", long: "Long · 12–28 words" }[sentenceLength(selectId)];
+    return { short: "5–18 words (Short)", medium: "8–20 words (Medium)", long: "12–28 words (Long)" }[sentenceLength(selectId)];
   }
 
   function practiceConfigKey(mode = $("mode-select").value) {
