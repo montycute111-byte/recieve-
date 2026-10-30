@@ -83,6 +83,7 @@
   };
   let exercise = "";
   let exerciseMode = "";
+  let exerciseConfigKey = "";
   let exerciseThemeId = "";
   let exerciseGeneration = 0;
   let lastAnswerCorrect = false;
@@ -91,6 +92,7 @@
   let awaitingNext = false;
   let listenExercise = "";
   let listenMode = "";
+  let listenConfigKey = "";
   let listenThemeId = "";
   let listenGeneration = 0;
   let listenAwaitingNext = false;
@@ -150,6 +152,23 @@
     return [5, 10, 15].includes(length) ? length : DEFAULT_EXERCISE_GROUP_SIZE;
   }
 
+  function sentenceLength(selectId) {
+    const length = $(selectId)?.value;
+    return ["short", "medium", "long"].includes(length) ? length : "long";
+  }
+
+  function practiceConfigKey(mode = $("mode-select").value) {
+    if (isRandomLettersMode(mode)) return `${mode}:${randomLettersLength("group-size-select")}`;
+    if (isThemedSentenceMode(mode)) return `${mode}:${sentenceLength("sentence-length-select")}`;
+    return mode;
+  }
+
+  function currentListenConfigKey(mode = $("listen-mode-select").value) {
+    if (isRandomLettersMode(mode)) return `${mode}:${randomLettersLength("listen-group-size-select")}`;
+    if (isThemedSentenceMode(mode)) return `${mode}:${sentenceLength("listen-sentence-length-select")}`;
+    return mode;
+  }
+
   function isThemedPracticeMode(mode) {
     return isThemedSentenceMode(mode) || isThemedWordMode(mode);
   }
@@ -169,11 +188,12 @@
     return themeCache.get(themeId);
   }
 
-  async function loadThemePool(prefix) {
-    const key = themePoolKey(`${prefix}:sentences`);
+  async function loadThemePool(prefix, length = "long") {
+    const selectedLength = ["short", "medium", "long"].includes(length) ? length : "long";
+    const key = themePoolKey(`${prefix}:sentences:${selectedLength}`);
     const loaded = await Promise.all(selectedThemes.map(async (themeId) => {
       const data = await loadThemeData(themeId);
-      const sentences = ["short", "medium", "long"].flatMap((group) => Array.isArray(data[group]) ? data[group] : []);
+      const sentences = Array.isArray(data[selectedLength]) ? data[selectedLength] : [];
       return sentences.map((text) => ({ text, themeId }));
     }));
     return { key, items: loaded.flat() };
@@ -266,6 +286,8 @@
     if ($("listen-theme-selector")) $("listen-theme-selector").hidden = !listenVisible;
     if ($("practice-length-control")) $("practice-length-control").hidden = !isRandomLettersMode($("mode-select").value);
     if ($("listen-length-control")) $("listen-length-control").hidden = !isRandomLettersMode($("listen-mode-select").value);
+    if ($("practice-sentence-length-control")) $("practice-sentence-length-control").hidden = !isThemedSentenceMode($("mode-select").value);
+    if ($("listen-sentence-length-control")) $("listen-sentence-length-control").hidden = !isThemedSentenceMode($("listen-mode-select").value);
   }
 
   function handleThemeChange(event) {
@@ -389,6 +411,7 @@
     const generation = ++exerciseGeneration;
     const mode = $("mode-select").value;
     const group = isRandomLettersMode(mode) ? randomLettersLength("group-size-select") : DEFAULT_EXERCISE_GROUP_SIZE;
+    const configKey = practiceConfigKey(mode);
     exerciseThemeId = "";
     if (mode === "numbers") {
       exercise = randomSequence(NUMBERS, group, `${mode}:${group}`);
@@ -418,7 +441,7 @@
       setStatus("Loading themes…");
       let pool;
       try {
-        pool = await loadThemePool("practice");
+        pool = await loadThemePool("practice", sentenceLength("sentence-length-select"));
       } catch (error) {
         if (generation !== exerciseGeneration) return;
         exercise = drawUnused(SENTENCES, "sentences-fallback");
@@ -455,6 +478,7 @@
     updateSummary();
     updateThemeSelectorVisibility();
     exerciseMode = mode;
+    exerciseConfigKey = configKey;
     window.morseCurrentExercise = exercise;
     notifyRpg("exercise-start", { channel: "practice", mode, text: exercise, themeId: exerciseThemeId });
   }
@@ -463,6 +487,7 @@
     const generation = ++listenGeneration;
     const mode = $("listen-mode-select").value;
     const group = isRandomLettersMode(mode) ? randomLettersLength("listen-group-size-select") : DEFAULT_EXERCISE_GROUP_SIZE;
+    const configKey = currentListenConfigKey(mode);
     listenThemeId = "";
     if (mode === "numbers") {
       listenExercise = randomSequence(NUMBERS, group, `listen:${mode}:${group}`);
@@ -491,7 +516,7 @@
       setListenStatus("Loading themes…");
       let pool;
       try {
-        pool = await loadThemePool("listen");
+        pool = await loadThemePool("listen", sentenceLength("listen-sentence-length-select"));
       } catch (error) {
         if (generation !== listenGeneration) return;
         listenExercise = drawUnused(SENTENCES, "listen:sentences-fallback");
@@ -510,6 +535,7 @@
     }
     if (generation !== listenGeneration) return;
     listenMode = mode;
+    listenConfigKey = configKey;
     listenPlayback.currentIndex = 0;
     listenAwaitingNext = false;
     updateListenProgress(0);
@@ -525,13 +551,13 @@
 
   function updateSummary() {
     const mode = $("mode-select").value;
-    const exerciseType = isSentenceMode() ? "Sentence" : isWordMode() ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = isSentenceMode() ? `${sentenceLength("sentence-length-select")} sentences` : isWordMode() ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
   function updateListenSummary() {
     const mode = $("listen-mode-select").value;
-    const exerciseType = ["sentences", "halloween-sentences"].includes(mode) ? "Sentence" : ["phrases", "halloween"].includes(mode) ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("listen-group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
+    const exerciseType = mode === "sentences" ? `${sentenceLength("listen-sentence-length-select")} sentences` : ["phrases", "halloween"].includes(mode) ? "Phrase" : isRandomLettersMode(mode) ? `${randomLettersLength("listen-group-size-select")} letters` : `${DEFAULT_EXERCISE_GROUP_SIZE} char`;
     $("listen-summary").textContent = `${exerciseType} · ${settings.effectiveWpm} eff · ${settings.frequency} Hz`;
   }
 
@@ -764,7 +790,8 @@
     }
     if (playback.active) return;
     const selectedMode = $("mode-select").value;
-    const needsExercise = !exercise || exerciseMode !== selectedMode;
+    const selectedConfigKey = practiceConfigKey(selectedMode);
+    const needsExercise = !exercise || exerciseConfigKey !== selectedConfigKey;
     const runId = ++playback.runId;
     playback.active = true;
     playback.countdown = settings.countdown;
@@ -780,7 +807,7 @@
       await ensureAudio();
       if (needsExercise) {
         await generateExercise();
-        if (runId !== playback.runId || exerciseMode !== selectedMode || !exercise) return;
+        if (runId !== playback.runId || exerciseConfigKey !== selectedConfigKey || !exercise) return;
       }
     } catch (error) {
       playback.active = false;
@@ -992,7 +1019,8 @@
     }
     if (listenPlayback.active) return;
     const selectedMode = $("listen-mode-select").value;
-    const needsExercise = !listenExercise || listenMode !== selectedMode;
+    const selectedConfigKey = currentListenConfigKey(selectedMode);
+    const needsExercise = !listenExercise || listenConfigKey !== selectedConfigKey;
     const runId = ++listenPlayback.runId;
     listenPlayback.active = true;
     listenPlayback.countdown = settings.countdown;
@@ -1008,7 +1036,7 @@
       await ensureListenAudio();
       if (needsExercise) {
         await generateListenExercise();
-        if (runId !== listenPlayback.runId || listenMode !== selectedMode || !listenExercise) return;
+        if (runId !== listenPlayback.runId || listenConfigKey !== selectedConfigKey || !listenExercise) return;
       }
     } catch (error) {
       listenPlayback.active = false;
@@ -1166,6 +1194,7 @@
     document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
     $("mode-select").addEventListener("change", () => { renderThemeSelectors(); generateExercise(); });
     $("group-size-select").addEventListener("change", generateExercise);
+    $("sentence-length-select")?.addEventListener("change", generateExercise);
     $("session-select").addEventListener("change", () => showToast($("session-select").value === "0" ? "Unlimited session selected" : `${$("session-select").value}-minute session selected`));
     $("start-button").addEventListener("click", startTransmission);
     $("replay-button").addEventListener("click", () => { stopTransmission(); playFrom(0); });
@@ -1174,6 +1203,7 @@
     $("stop-button").addEventListener("click", stopTransmission);
     $("listen-mode-select").addEventListener("change", () => { renderThemeSelectors(); changeListenExercise(); });
     $("listen-group-size-select").addEventListener("change", changeListenExercise);
+    $("listen-sentence-length-select")?.addEventListener("change", changeListenExercise);
     $("listen-session-select").addEventListener("change", () => showToast($("listen-session-select").value === "0" ? "Unlimited session selected" : `${$("listen-session-select").value}-minute session selected`));
     $("listen-start-button").addEventListener("click", startListenTransmission);
     $("listen-replay-button").addEventListener("click", () => { stopListenTransmission(true); playListenFrom(0); });

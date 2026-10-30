@@ -63,6 +63,7 @@
         <div class="settings-strip panel">
           <label>Mode<select id="mode-select"><option value="numbers">Numbers</option><option value="random-letters">Random Letters</option><option value="phrases">Phrases</option><option value="sentences">Sentences</option></select></label>
           <label id="practice-length-control" hidden>Length<select id="group-size-select"><option value="5">5 letters</option><option value="10">10 letters</option><option value="15">15 letters</option></select></label>
+          <label id="practice-sentence-length-control" hidden>Sentence length<select id="sentence-length-select"><option value="short">Short</option><option value="medium">Medium</option><option value="long" selected>Long</option></select></label>
           <label>Session<select id="session-select"><option value="0">Unlimited</option><option value="1">1 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="10">10 min</option></select></label>
           <div class="settings-summary"><strong id="summary">5 char · 5 eff · 699 Hz</strong><span>Ready to receive</span></div>
         </div>
@@ -104,6 +105,7 @@
         <div class="settings-strip panel">
           <label>Mode<select id="listen-mode-select"><option value="numbers">Numbers</option><option value="random-letters">Random Letters</option><option value="phrases">Phrases</option><option value="sentences">Sentences</option></select></label>
           <label id="listen-length-control" hidden>Length<select id="listen-group-size-select"><option value="5">5 letters</option><option value="10">10 letters</option><option value="15">15 letters</option></select></label>
+          <label id="listen-sentence-length-control" hidden>Sentence length<select id="listen-sentence-length-select"><option value="short">Short</option><option value="medium">Medium</option><option value="long" selected>Long</option></select></label>
           <label>Session<select id="listen-session-select"><option value="0">Unlimited</option><option value="1">1 min</option><option value="3">3 min</option><option value="5">5 min</option><option value="10">10 min</option></select></label>
           <div class="settings-summary"><strong id="listen-summary">5 char · 5 eff · 699 Hz</strong><span>Ready to receive</span></div>
         </div>
@@ -198,7 +200,7 @@
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="rpg.js?v=32"></script>
-  <script src="app.js?v=45"></script>
+  <script src="app.js?v=46"></script>
   <script type="module" src="firebase.js?v=6"></script>
 </body>
 </html>
