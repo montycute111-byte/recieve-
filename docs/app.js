@@ -82,6 +82,7 @@
     runId: 0, audio: null, oscillator: null, toastTimer: null, successAudio: null
   };
   let exercise = "";
+  let exerciseMode = "";
   let exerciseThemeId = "";
   let exerciseGeneration = 0;
   let lastAnswerCorrect = false;
@@ -89,6 +90,7 @@
   let transmissionFinished = false;
   let awaitingNext = false;
   let listenExercise = "";
+  let listenMode = "";
   let listenThemeId = "";
   let listenGeneration = 0;
   let listenAwaitingNext = false;
@@ -439,6 +441,7 @@
     $("continue-button").hidden = true;
     updateSummary();
     updateThemeSelectorVisibility();
+    exerciseMode = mode;
     window.morseCurrentExercise = exercise;
     notifyRpg("exercise-start", { channel: "practice", mode, text: exercise, themeId: exerciseThemeId });
   }
@@ -491,6 +494,7 @@
       listenExercise = randomSequence(LETTERS, group, `listen:${mode}:${group}`);
     }
     if (generation !== listenGeneration) return;
+    listenMode = mode;
     listenPlayback.currentIndex = 0;
     listenAwaitingNext = false;
     updateListenProgress(0);
@@ -744,7 +748,8 @@
       return;
     }
     if (playback.active) return;
-    if (!exercise) generateExercise();
+    const selectedMode = $("mode-select").value;
+    const needsExercise = !exercise || exerciseMode !== selectedMode;
     const runId = ++playback.runId;
     playback.active = true;
     playback.countdown = settings.countdown;
@@ -758,6 +763,10 @@
       // Initialize/resume Web Audio during the user's tap before the countdown.
       // Mobile browsers may reject audio if the context is first resumed later.
       await ensureAudio();
+      if (needsExercise) {
+        await generateExercise();
+        if (runId !== playback.runId || exerciseMode !== selectedMode || !exercise) return;
+      }
     } catch (error) {
       playback.active = false;
       playback.countdown = false;
@@ -967,7 +976,8 @@
       return;
     }
     if (listenPlayback.active) return;
-    if (!listenExercise) generateListenExercise();
+    const selectedMode = $("listen-mode-select").value;
+    const needsExercise = !listenExercise || listenMode !== selectedMode;
     const runId = ++listenPlayback.runId;
     listenPlayback.active = true;
     listenPlayback.countdown = settings.countdown;
@@ -981,6 +991,10 @@
     $("listen-next-button").disabled = false;
     try {
       await ensureListenAudio();
+      if (needsExercise) {
+        await generateListenExercise();
+        if (runId !== listenPlayback.runId || listenMode !== selectedMode || !listenExercise) return;
+      }
     } catch (error) {
       listenPlayback.active = false;
       listenPlayback.countdown = false;
